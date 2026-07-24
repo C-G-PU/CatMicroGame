@@ -122,12 +122,14 @@
                             <Button Grid.Column="1" Content="Добавить" Width="70" Padding="0" Click="AddCustomSkin_Click" Background="#440055FF"/>
                         </Grid>
                         <ComboBox x:Name="CatSkinCombo" Grid.Row="1" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
+                            <ComboBoxItem Content="Анимация 1 (Idle)" Tag="Cat1Anim1.gif"/>
                             <ComboBoxItem Content="Sleeping Cat (cat1.png)" Tag="cat1.png"/>
                         </ComboBox>
 
                         <TextBlock Grid.Row="2" Text="Active Анимация (Уведомление):" FontWeight="Bold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="CatActiveSkinCombo" Grid.Row="3" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
                             <ComboBoxItem Content="Одинаковые (Нет)" Tag=""/>
+                            <ComboBoxItem Content="Анимация 2 (Active)" Tag="Cat1Anim2.gif"/>
                             <ComboBoxItem Content="Sleeping Cat (cat1.png)" Tag="cat1.png"/>
                         </ComboBox>
 
