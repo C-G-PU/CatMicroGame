@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System.Linq;
+using System.Windows.Media.Animation;
+using System.Windows.Media;
 using DesktopCat.Services;
 using DesktopCat.UI;
 using Forms = System.Windows.Forms;
@@ -15,13 +17,22 @@ namespace DesktopCat
         private AppSettings _settings;
         private NotificationService _notificationService;
         private DispatcherTimer _hideBubbleTimer;
+        private DispatcherTimer _animationTimer;
         private Forms.NotifyIcon? _notifyIcon;
+        private Storyboard? _currentAnimation;
 
         public MainWindow()
         {
             InitializeComponent();
 
             _settings = SettingsManager.Load();
+            SettingsManager.OnSettingsChanged += (s) => {
+                Dispatcher.Invoke(() => {
+                    _settings = s;
+                    ApplySettings();
+                });
+            };
+
             _notificationService = new NotificationService();
             _notificationService.OnNotificationReceived += OnNotificationReceived;
 
@@ -32,10 +43,51 @@ namespace DesktopCat
                 _hideBubbleTimer.Stop();
             };
 
+            _animationTimer = new DispatcherTimer();
+            _animationTimer.Tick += (s, e) => {
+                SetIdleAnimation();
+                _animationTimer.Stop();
+            };
+
             SetupTrayIcon();
 
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
+        }
+
+        private void StartAnimation(double fromAngle, double toAngle, double durationSeconds)
+        {
+            if (_currentAnimation != null)
+            {
+                _currentAnimation.Stop();
+            }
+
+            var animation = new DoubleAnimation
+            {
+                From = fromAngle,
+                To = toAngle,
+                Duration = new Duration(TimeSpan.FromSeconds(durationSeconds)),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+
+            Storyboard.SetTargetName(animation, "CatRotation");
+            Storyboard.SetTargetProperty(animation, new PropertyPath(RotateTransform.AngleProperty));
+
+            _currentAnimation = new Storyboard();
+            _currentAnimation.Children.Add(animation);
+
+            _currentAnimation.Begin(this, true);
+        }
+
+        private void SetIdleAnimation()
+        {
+            StartAnimation(-3, 3, 2.0); // Медленное, легкое покачивание
+        }
+
+        private void SetActiveAnimation()
+        {
+            StartAnimation(-15, 15, 0.4); // Быстрое, активное покачивание
         }
 
         private void SetupTrayIcon()
@@ -77,6 +129,15 @@ namespace DesktopCat
             this.Height = newSize + 30;
             CatSprite.Width = newSize;
             CatSprite.Height = newSize;
+
+            try
+            {
+                CatSprite.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri($"pack://application:,,,/Assets/{_settings.CatSkin}"));
+            }
+            catch
+            {
+                // Fallback to default if skin not found
+            }
         }
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
@@ -92,6 +153,7 @@ namespace DesktopCat
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             ApplySettings();
+            SetIdleAnimation();
 
             if (_settings.LastX >= 0 && _settings.LastY >= 0)
             {
@@ -155,6 +217,11 @@ namespace DesktopCat
             NotificationBubble.Visibility = Visibility.Visible;
             _hideBubbleTimer.Stop();
             _hideBubbleTimer.Start();
+
+            SetActiveAnimation();
+            _animationTimer.Interval = TimeSpan.FromSeconds(_settings.ActiveAnimationDuration > 0 ? _settings.ActiveAnimationDuration : 5);
+            _animationTimer.Stop();
+            _animationTimer.Start();
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)

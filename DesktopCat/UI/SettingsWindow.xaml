@@ -1,28 +1,77 @@
 <Window x:Class="DesktopCat.UI.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Настройки котика" Height="300" Width="400" WindowStartupLocation="CenterScreen">
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        Title="Настройки котика" Height="500" Width="450" WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" MouseDown="Window_MouseDown">
+    <Window.Resources>
+        <!-- Glassmorphism стили -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#44FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#88FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#66FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
 
-        <TextBlock Text="Разрешенные приложения (через запятую):" FontWeight="Bold" Margin="0,0,0,5"/>
-        <TextBox x:Name="AppsTextBox" Grid.Row="1" TextWrapping="Wrap" AcceptsReturn="True"
-                 ToolTip="Введите имена приложений (например: Telegram, Discord, Mail). Оставьте пустым, чтобы разрешить все."/>
+    <!-- Основной фон Glassmorphism -->
+    <Border Background="#991A1A1A" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="15" Margin="10">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Color="Black" Opacity="0.5"/>
+        </Border.Effect>
 
-        <StackPanel Grid.Row="2" Margin="0,10,0,0">
-            <TextBlock Text="Размер котика:" FontWeight="Bold" Margin="0,0,0,5"/>
-            <Slider x:Name="SizeSlider" Minimum="60" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True"
-                    Value="120" AutoToolTipPlacement="TopLeft"/>
-        </StackPanel>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="Сохранить" Width="100" Margin="0,0,10,0" Click="Save_Click"/>
-            <Button Content="Отмена" Width="100" Click="Cancel_Click"/>
-        </StackPanel>
-    </Grid>
+            <TextBlock Text="⚙ Настройки Desktop Cat" FontSize="20" FontWeight="Bold" Margin="0,0,0,15" HorizontalAlignment="Center"/>
+
+            <TextBlock Grid.Row="1" Text="Выбор персонажа:" FontWeight="Bold" Margin="0,0,0,5"/>
+            <ComboBox x:Name="CatSkinCombo" Grid.Row="2" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
+                <ComboBoxItem Content="Meowth" Tag="cat.png"/>
+                <ComboBoxItem Content="Skitty" Tag="skitty.png"/>
+                <ComboBoxItem Content="Litten" Tag="litten.png"/>
+                <ComboBoxItem Content="Sprigatito" Tag="sprigatito.png"/>
+            </ComboBox>
+
+            <TextBlock Grid.Row="3" Text="Размер котика:" FontWeight="Bold" Margin="0,0,0,5"/>
+            <Slider x:Name="SizeSlider" Grid.Row="4" Minimum="60" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True"
+                    Value="120" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+            <TextBlock Grid.Row="5" Text="Длительность активной анимации (сек):" FontWeight="Bold" Margin="0,0,0,5"/>
+            <Slider x:Name="AnimationSlider" Grid.Row="6" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True"
+                    Value="5" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15"/>
+
+            <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <Button Content="Разрешения Windows" Width="150" Margin="0,0,10,0" Click="OpenWindowsSettings_Click" Background="#440055FF"/>
+                <Button Content="Ок" Width="100" Click="Save_Click" Background="#4400AA00"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>
