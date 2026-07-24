@@ -14,115 +14,71 @@
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
-        MouseDown="Window_MouseDown">
+        MouseDown="Window_MouseDown"
+        MouseMove="Window_MouseMove"
+        MouseUp="Window_MouseUp">
 
     <!-- Главный контейнер -->
     <Grid Background="Transparent">
 
         <!-- Картинка котика с анимацией покачивания (теперь пиксельная, без сглаживания) -->
         <!-- Добавлена поддержка GIF/Видео через gif:ImageBehavior -->
-        <Image x:Name="CatSprite" gif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/cat1.png" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="NearestNeighbor">
+        <Image x:Name="CatSprite" gif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/cat1.png" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="NearestNeighbor" VerticalAlignment="Bottom" Margin="0,0,0,10">
             <Image.RenderTransform>
                 <RotateTransform x:Name="CatRotation" Angle="0"/>
             </Image.RenderTransform>
-            <Image.ContextMenu>
-                <ContextMenu Background="#991A1A1A" BorderBrush="#33FFFFFF" BorderThickness="1" Foreground="White" HasDropShadow="True">
-                    <ContextMenu.Resources>
-                        <Style TargetType="MenuItem">
+        </Image>
+
+        <!-- Эффект сердечек (появляется при клике) -->
+        <TextBlock x:Name="HeartsEffect" Text="❤" Foreground="#FFFF3366" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-20,0,0" Opacity="0" Panel.ZIndex="5">
+            <TextBlock.RenderTransform>
+                <TranslateTransform x:Name="HeartsTransform" Y="0"/>
+            </TextBlock.RenderTransform>
+        </TextBlock>
+
+        <!-- Круговое меню (Radial Menu) -->
+        <Popup x:Name="RadialMenuPopup" StaysOpen="False" AllowsTransparency="True" Placement="Center" PlacementTarget="{Binding ElementName=CatSprite}">
+            <Grid Width="200" Height="200">
+                <!-- Обертка для кнопок, чтобы располагать их по кругу -->
+                <Canvas x:Name="RadialCanvas" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Canvas.Resources>
+                        <Style TargetType="Button" x:Key="RadialBtnStyle">
+                            <Setter Property="Width" Value="50"/>
+                            <Setter Property="Height" Value="50"/>
+                            <Setter Property="Background" Value="#AA1A1A1A"/>
                             <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Padding" Value="10,5"/>
+                            <Setter Property="BorderBrush" Value="#66FFFFFF"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
                             <Setter Property="Template">
                                 <Setter.Value>
-                                    <ControlTemplate TargetType="MenuItem">
-                                        <Border x:Name="Border" Background="Transparent" CornerRadius="3" Margin="2">
-                                            <Grid>
-                                                <ContentPresenter ContentSource="Header" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
-                                            </Grid>
-                                        </Border>
+                                    <ControlTemplate TargetType="Button">
+                                        <Grid>
+                                            <Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="{TemplateBinding BorderThickness}"/>
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
                                         <ControlTemplate.Triggers>
-                                            <Trigger Property="IsHighlighted" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="#44FFFFFF"/>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#EE444444"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
                         </Style>
-                    </ContextMenu.Resources>
-                    <MenuItem Header="Настройки" Click="SettingsBtn_Click"/>
-                    <MenuItem Header="Выход" Click="CloseBtn_Click"/>
-                </ContextMenu>
-            </Image.ContextMenu>
-        </Image>
+                    </Canvas.Resources>
 
-        <!-- Кнопки управления (скрыты по умолчанию, появляются при наведении) Glassmorphism -->
-        <Grid x:Name="ControlButtons" Opacity="0">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="Opacity" Value="0"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=CatSprite}" Value="True">
-                            <DataTrigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.ExitActions>
-                        </DataTrigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
+                    <!-- Кнопки (позиции X/Y выставляются в коде при открытии) -->
+                    <Button x:Name="BtnRadSettings" Style="{StaticResource RadialBtnStyle}" Content="⚙" FontSize="20" ToolTip="Стили и настройки" Click="RadialSettings_Click"/>
+                    <Button x:Name="BtnRadCalendar" Style="{StaticResource RadialBtnStyle}" Content="📅" FontSize="20" ToolTip="Календарь и Задачи" Click="RadialCalendar_Click"/>
+                    <Button x:Name="BtnRadStats"    Style="{StaticResource RadialBtnStyle}" Content="📊" FontSize="20" ToolTip="Статистика" Click="RadialStats_Click"/>
+                    <Button x:Name="BtnRadNotif"    Style="{StaticResource RadialBtnStyle}" Content="🔔" FontSize="20" ToolTip="Вкл/Выкл уведомления" Click="RadialNotif_Click"/>
+                    <Button x:Name="BtnRadSound"    Style="{StaticResource RadialBtnStyle}" Content="🔊" FontSize="20" ToolTip="Вкл/Выкл звук" Click="RadialSound_Click"/>
+                    <Button x:Name="BtnRadExit"     Style="{StaticResource RadialBtnStyle}" Content="✖" FontSize="20" Foreground="#FF5555" ToolTip="Выход" Click="CloseBtn_Click"/>
+                </Canvas>
+            </Grid>
+        </Popup>
 
-            <!-- Кнопка "Настройки" (шестеренка справа) -->
-            <Button Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-10,0"
-                    Background="#881A1A1A" BorderBrush="#55FFFFFF" Cursor="Hand" Click="SettingsBtn_Click">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1"/>
-                            <TextBlock Text="⚙" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-
-            <!-- Кнопка "Закрыть" (крестик снизу) -->
-            <Button Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5"
-                    Background="#88AA0000" BorderBrush="#55FFFFFF" Cursor="Hand" Click="CloseBtn_Click">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1"/>
-                            <TextBlock Text="✖" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="12" Margin="0,-2,0,0"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-        </Grid>
 
         <!-- Текст уведомления (облачко) -->
         <Border x:Name="NotificationBubble"
@@ -131,11 +87,40 @@
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="5"
-                Margin="0,0,0,10"
+                Margin="0,-20,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
-                Visibility="Collapsed">
-            <TextBlock x:Name="NotificationText" Text="Notification text" MaxWidth="120" TextWrapping="Wrap" />
+                Visibility="Collapsed"
+                Panel.ZIndex="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="NotificationText" Text="Notification text" MaxWidth="150" TextWrapping="Wrap" Foreground="Black" Margin="5"/>
+
+                <!-- Кнопки действия для уведомления (✔ и ✖) -->
+                <StackPanel x:Name="NotificationActionPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0" Visibility="Collapsed">
+                    <Button Content="✔" Width="25" Height="25" Margin="0,0,10,0" Background="#4400AA00" Foreground="White" BorderBrush="Transparent" Cursor="Hand" Click="NotifCompleteBtn_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="12">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button Content="✖" Width="25" Height="25" Background="#88AA0000" Foreground="White" BorderBrush="Transparent" Cursor="Hand" Click="NotifCloseBtn_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="12">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>
