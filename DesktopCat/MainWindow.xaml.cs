@@ -15,9 +15,9 @@ namespace DesktopCat
     public partial class MainWindow : Window
     {
         private AppSettings _settings;
-        private NotificationService _notificationService;
         private DispatcherTimer _hideBubbleTimer;
         private DispatcherTimer _animationTimer;
+        private DispatcherTimer _schedulerTimer;
         private Forms.NotifyIcon? _notifyIcon;
         private Storyboard? _currentAnimation;
 
@@ -33,9 +33,6 @@ namespace DesktopCat
                 });
             };
 
-            _notificationService = new NotificationService();
-            _notificationService.OnNotificationReceived += OnNotificationReceived;
-
             _hideBubbleTimer = new DispatcherTimer();
             _hideBubbleTimer.Interval = TimeSpan.FromSeconds(5);
             _hideBubbleTimer.Tick += (s, e) => {
@@ -49,13 +46,102 @@ namespace DesktopCat
                 _animationTimer.Stop();
             };
 
+            _schedulerTimer = new DispatcherTimer();
+            _schedulerTimer.Interval = TimeSpan.FromSeconds(30); // Проверка каждые 30 сек
+            _schedulerTimer.Tick += SchedulerTimer_Tick;
+            _schedulerTimer.Start();
+
             SetupTrayIcon();
 
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
         }
 
-        private void StartAnimation(double fromAngle, double toAngle, double durationSeconds)
+        private void SchedulerTimer_Tick(object? sender, EventArgs e)
+        {
+            var now = DateTime.Now;
+            bool settingsChanged = false;
+
+            foreach (var task in _settings.TodoList)
+            {
+                // Сбрасываем флаг завершения для постоянных задач, если наступил новый день
+                if (task.IsPermanent && task.IsCompleted && task.ScheduledTime.Date < now.Date)
+                {
+                    task.IsCompleted = false;
+                    // Обновляем дату задачи на сегодня, чтобы она снова сработала
+                    task.ScheduledTime = new DateTime(now.Year, now.Month, now.Day, task.ScheduledTime.Hour, task.ScheduledTime.Minute, 0);
+                    settingsChanged = true;
+                }
+
+                // Проверяем, наступило ли время задачи
+                if (!task.IsCompleted &&
+                    task.ScheduledTime.Hour == now.Hour &&
+                    task.ScheduledTime.Minute == now.Minute &&
+                    task.ScheduledTime.Date <= now.Date)
+                {
+                    // Время пришло! Показываем задачу
+                    ShowBubble($"Напоминание:\n{task.Title}");
+
+                    // Отмечаем как выполненную, чтобы не спамить
+                    task.IsCompleted = true;
+                    settingsChanged = true;
+                }
+            }
+
+            if (settingsChanged)
+            {
+                SettingsManager.Save(_settings);
+            }
+        }
+
+        private void SetIdleAnimation()
+        {
+            // Возвращаем основную картинку/GIF
+            LoadSkin(_settings.CatSkin);
+
+            // Оставляем легкое покачивание как fallback-эффект дыхания
+            StartRotateAnimation(-3, 3, 2.0);
+        }
+
+        private void SetActiveAnimation()
+        {
+            // Если есть отдельная картинка/GIF для активности - включаем её
+            if (!string.IsNullOrEmpty(_settings.CatActiveSkin))
+            {
+                LoadSkin(_settings.CatActiveSkin);
+            }
+
+            // Если её нет или включено покачивание
+            StartRotateAnimation(-15, 15, 0.4);
+        }
+
+        private void LoadSkin(string skinName)
+        {
+            try
+            {
+                string packUri = $"pack://application:,,,/Assets/{skinName}";
+                string localUri = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", skinName);
+
+                Uri uri;
+                if (System.IO.File.Exists(localUri))
+                {
+                    uri = new Uri(localUri);
+                }
+                else
+                {
+                    uri = new Uri(packUri);
+                }
+
+                var img = new System.Windows.Media.Imaging.BitmapImage(uri);
+                WpfAnimatedGif.ImageBehavior.SetAnimatedSource(CatSprite, img);
+            }
+            catch
+            {
+                // Fallback
+            }
+        }
+
+        private void StartRotateAnimation(double fromAngle, double toAngle, double durationSeconds)
         {
             if (_currentAnimation != null)
             {
@@ -78,16 +164,6 @@ namespace DesktopCat
             _currentAnimation.Children.Add(animation);
 
             _currentAnimation.Begin(this, true);
-        }
-
-        private void SetIdleAnimation()
-        {
-            StartAnimation(-3, 3, 2.0); // Медленное, легкое покачивание
-        }
-
-        private void SetActiveAnimation()
-        {
-            StartAnimation(-15, 15, 0.4); // Быстрое, активное покачивание
         }
 
         private void SetupTrayIcon()
@@ -147,14 +223,7 @@ namespace DesktopCat
             CatSprite.Width = newSize;
             CatSprite.Height = newSize;
 
-            try
-            {
-                CatSprite.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri($"pack://application:,,,/Assets/{_settings.CatSkin}"));
-            }
-            catch
-            {
-                // Fallback to default if skin not found
-            }
+            LoadSkin(_settings.CatSkin);
         }
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
@@ -167,7 +236,7 @@ namespace DesktopCat
             System.Windows.Application.Current.Shutdown();
         }
 
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             ApplySettings();
             SetIdleAnimation();
@@ -184,16 +253,7 @@ namespace DesktopCat
                 this.Top = desktopWorkingArea.Bottom - this.Height;
             }
 
-            bool success = await _notificationService.InitializeAsync();
-            if (!success)
-            {
-                // Если нет доступа, показываем сообщение один раз
-                ShowBubble("Нет доступа к уведомлениям!");
-            }
-            else
-            {
-                ShowBubble("Мяу! Я готов.");
-            }
+            ShowBubble("Мяу! Я готов.");
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -207,25 +267,6 @@ namespace DesktopCat
                 _notifyIcon.Visible = false;
                 _notifyIcon.Dispose();
             }
-        }
-
-        private void OnNotificationReceived(string appName, string title, string message)
-        {
-            // Фильтрация: если список не пуст, и приложения нет в списке, игнорируем
-            if (_settings.AllowedApps.Count > 0 &&
-                !_settings.AllowedApps.Any(a => a.Equals(appName, StringComparison.OrdinalIgnoreCase)))
-            {
-                return;
-            }
-
-            Dispatcher.Invoke(() =>
-            {
-                string displayText = $"{appName}: {title}";
-                if (!string.IsNullOrEmpty(message))
-                    displayText += $"\n{message}";
-
-                ShowBubble(displayText);
-            });
         }
 
         private void ShowBubble(string text)

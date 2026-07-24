@@ -7,8 +7,10 @@ namespace DesktopCat.Services
 {
     public class AppSettings
     {
-        public List<string> AllowedApps { get; set; } = new List<string>();
-        public string CatSkin { get; set; } = "cat.png";
+        public List<TodoTask> TodoList { get; set; } = new List<TodoTask>();
+        public string CatSkin { get; set; } = "cat1.png"; // Новое дефолтное видео
+        public string CatActiveSkin { get; set; } = ""; // Опционально второе видео для уведомлений
+        public List<string> CustomSkins { get; set; } = new List<string>();
         public double CatSize { get; set; } = 120.0;
         public double LastX { get; set; } = -1;
         public double LastY { get; set; } = -1;

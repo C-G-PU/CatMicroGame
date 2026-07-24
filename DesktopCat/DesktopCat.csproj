@@ -12,11 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="UIAutomationClient" />
-    <Reference Include="UIAutomationTypes" />
-  </ItemGroup>
-
-  <ItemGroup>
     <SupportedOSPlatformVersion Include="10.0.19041.0" />
   </ItemGroup>
 
@@ -25,7 +20,12 @@
     <Resource Include="Assets\skitty.png" />
     <Resource Include="Assets\litten.png" />
     <Resource Include="Assets\sprigatito.png" />
+    <Resource Include="Assets\cat1.png" />
     <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
   </ItemGroup>
 
 </Project>

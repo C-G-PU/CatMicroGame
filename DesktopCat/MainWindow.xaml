@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DesktopCat"
+        xmlns:gif="clr-namespace:WpfAnimatedGif;assembly=WpfAnimatedGif"
         mc:Ignorable="d"
         Title="DesktopCat"
         Height="150" Width="150"
@@ -19,7 +20,8 @@
     <Grid Background="Transparent">
 
         <!-- Картинка котика с анимацией покачивания (теперь пиксельная, без сглаживания) -->
-        <Image x:Name="CatSprite" Source="pack://application:,,,/Assets/cat.png" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="NearestNeighbor">
+        <!-- Добавлена поддержка GIF/Видео через gif:ImageBehavior -->
+        <Image x:Name="CatSprite" gif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/cat1.png" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="NearestNeighbor">
             <Image.RenderTransform>
                 <RotateTransform x:Name="CatRotation" Angle="0"/>
             </Image.RenderTransform>
