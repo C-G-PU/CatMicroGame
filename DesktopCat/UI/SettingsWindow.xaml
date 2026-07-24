@@ -40,36 +40,110 @@
 
         <Grid Margin="20">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/> <!-- Title -->
+                <RowDefinition Height="Auto"/> <!-- Tabs (Tasks/Settings) -->
+                <RowDefinition Height="*"/>    <!-- Content -->
+                <RowDefinition Height="Auto"/> <!-- Bottom Buttons -->
             </Grid.RowDefinitions>
 
-            <TextBlock Text="⚙ Настройки Desktop Cat" FontSize="20" FontWeight="Bold" Margin="0,0,0,15" HorizontalAlignment="Center"/>
+            <TextBlock Text="⚙ Настройки и Задачи" FontSize="20" FontWeight="Bold" Margin="0,0,0,15" HorizontalAlignment="Center"/>
 
-            <TextBlock Grid.Row="1" Text="Выбор персонажа:" FontWeight="Bold" Margin="0,0,0,5"/>
-            <ComboBox x:Name="CatSkinCombo" Grid.Row="2" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
-                <ComboBoxItem Content="Meowth" Tag="cat.png"/>
-                <ComboBoxItem Content="Skitty" Tag="skitty.png"/>
-                <ComboBoxItem Content="Litten" Tag="litten.png"/>
-                <ComboBoxItem Content="Sprigatito" Tag="sprigatito.png"/>
-            </ComboBox>
+            <TabControl Grid.Row="2" Background="Transparent" BorderThickness="0">
 
-            <TextBlock Grid.Row="3" Text="Размер котика:" FontWeight="Bold" Margin="0,0,0,5"/>
-            <Slider x:Name="SizeSlider" Grid.Row="4" Minimum="60" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True"
-                    Value="120" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+                <!-- Вкладка Задач (To-Do) -->
+                <TabItem Header="Мои задачи" Foreground="Black">
+                    <Grid Margin="0,10,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="5" Text="Длительность активной анимации (сек):" FontWeight="Bold" Margin="0,0,0,5"/>
-            <Slider x:Name="AnimationSlider" Grid.Row="6" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True"
-                    Value="5" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15"/>
+                        <!-- Форма добавления задачи -->
+                        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                            <TextBox x:Name="TaskTitleInput" Padding="5" Margin="0,0,0,5" Text="Новая задача..." Foreground="Black" GotFocus="TaskTitleInput_GotFocus"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Дата: " Foreground="White" VerticalAlignment="Center"/>
+                                    <DatePicker x:Name="TaskDatePicker" Width="100" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Время: " Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="TaskTimeInput" Width="40" Text="12:00" Padding="2" Margin="0,0,10,0" Foreground="Black"/>
+                                    <CheckBox x:Name="TaskPermanentCheck" Content="Постоянная" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Добавить" Width="80" Click="AddTask_Click" Background="#440055FF"/>
+                            </Grid>
+                        </StackPanel>
 
-            <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                <Button Content="Ок" Width="100" Click="Save_Click" Background="#4400AA00"/>
+                        <!-- Список задач -->
+                        <ListBox x:Name="TasksList" Grid.Row="2" Background="#44FFFFFF" BorderThickness="0" Foreground="Black" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding IsCompleted}" VerticalAlignment="Center" Margin="0,0,5,0" Checked="TaskItem_Changed" Unchecked="TaskItem_Changed"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding ScheduledTime, StringFormat=\{0:HH:mm\}}" VerticalAlignment="Center" Foreground="LightGray" Margin="5,0"/>
+                                        <Button Grid.Column="3" Content="✖" Width="20" Height="20" Padding="0" Background="#88AA0000" Click="DeleteTask_Click" Tag="{Binding Id}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </TabItem>
+
+                <!-- Вкладка Настроек -->
+                <TabItem Header="Внешний вид" Foreground="Black">
+                    <Grid Margin="0,10,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Idle Анимация (Спокойно):" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Добавить" Width="70" Padding="0" Click="AddCustomSkin_Click" Background="#440055FF"/>
+                        </Grid>
+                        <ComboBox x:Name="CatSkinCombo" Grid.Row="1" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
+                            <ComboBoxItem Content="Sleeping Cat (cat1.png)" Tag="cat1.png"/>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="2" Text="Active Анимация (Уведомление):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="CatActiveSkinCombo" Grid.Row="3" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
+                            <ComboBoxItem Content="Одинаковые (Нет)" Tag=""/>
+                            <ComboBoxItem Content="Sleeping Cat (cat1.png)" Tag="cat1.png"/>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="4" Text="Размер котика:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="SizeSlider" Grid.Row="5" Minimum="60" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True"
+                                Value="120" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                        <TextBlock Grid.Row="6" Text="Длительность активной анимации (сек):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="AnimationSlider" Grid.Row="7" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True"
+                                Value="5" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15"/>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <Button Content="Сохранить и закрыть" Width="150" Click="Save_Click" Background="#4400AA00"/>
             </StackPanel>
         </Grid>
     </Border>
