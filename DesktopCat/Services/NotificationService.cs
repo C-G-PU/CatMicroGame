@@ -1,90 +1,118 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Windows.Foundation.Metadata;
-using Windows.UI.Notifications;
-using Windows.UI.Notifications.Management;
+using System.Windows.Automation;
+using System.Threading;
+using System.Diagnostics;
+using System;
 
 namespace DesktopCat.Services
 {
     public class NotificationService
     {
-        private UserNotificationListener? _listener;
-
-        // Событие, которое будет вызываться при новом уведомлении (AppName, Title, Message)
         public event Action<string, string, string>? OnNotificationReceived;
+        private AutomationEventHandler? _windowOpenedHandler;
 
         public NotificationService()
         {
         }
 
-        public async Task<bool> InitializeAsync()
+        public Task<bool> InitializeAsync()
         {
             try
             {
-                if (!ApiInformation.IsTypePresent("Windows.UI.Notifications.Management.UserNotificationListener"))
-                {
-                    return false; // ОС не поддерживает
-                }
+                // Подписываемся на события появления новых окон
+                _windowOpenedHandler = new AutomationEventHandler(OnWindowOpened);
+                Automation.AddAutomationEventHandler(
+                    WindowPattern.WindowOpenedEvent,
+                    AutomationElement.RootElement,
+                    TreeScope.Children,
+                    _windowOpenedHandler);
 
-                _listener = UserNotificationListener.Current;
-                var accessStatus = await _listener.RequestAccessAsync();
-
-                if (accessStatus != UserNotificationListenerAccessStatus.Allowed)
-                {
-                    return false; // Нет доступа (пользователь не разрешил)
-                }
-
-                // Подписываемся на события добавления уведомлений
-                _listener.NotificationChanged += Listener_NotificationChanged;
-
-                return true;
-            }
-            catch (Exception)
-            {
-                // При запуске без манифеста / вне UWP-контейнера в некоторых версиях Windows
-                // вызов UserNotificationListener.Current может выбрасывать исключение (System.InvalidOperationException: The process has no package identity).
-                return false;
-            }
-        }
-
-        private async void Listener_NotificationChanged(UserNotificationListener sender, UserNotificationChangedEventArgs args)
-        {
-            // Нас интересуют только новые добавленные уведомления
-            if (args.ChangeKind != UserNotificationChangedKind.Added)
-                return;
-
-            try
-            {
-                // Получаем само уведомление по его ID
-                var notification = _listener?.GetNotification(args.UserNotificationId);
-                if (notification == null) return;
-
-                // Извлекаем имя приложения
-                string appName = notification.AppInfo.DisplayInfo.DisplayName;
-
-                // Извлекаем текст
-                var bindings = notification.Notification.Visual.Bindings;
-                string title = "";
-                string message = "";
-
-                if (bindings.Count > 0)
-                {
-                    var textElements = bindings[0].GetTextElements();
-                    if (textElements.Count > 0)
-                        title = textElements[0].Text;
-                    if (textElements.Count > 1)
-                        message = textElements[1].Text;
-                }
-
-                // Вызываем событие в приложении
-                OnNotificationReceived?.Invoke(appName, title, message);
+                return Task.FromResult(true);
             }
             catch
             {
-                // Игнорируем ошибки при чтении конкретного уведомления (иногда они удаляются быстрее, чем мы их читаем)
+                return Task.FromResult(false);
             }
+        }
+
+        private void OnWindowOpened(object sender, AutomationEventArgs e)
+        {
+            if (sender is AutomationElement element)
+            {
+                try
+                {
+                    // Проверяем, является ли окно тост-уведомлением
+                    if (element.Current.ClassName == "Windows.UI.Core.CoreWindow" && element.Current.Name.Contains("Toast"))
+                    {
+                        ParseNotification(element);
+                    }
+                }
+                catch (ElementNotAvailableException)
+                {
+                    // Игнорируем, окно могло уже закрыться
+                }
+                catch
+                {
+                    // Игнорируем другие ошибки при чтении Automation свойств
+                }
+            }
+        }
+
+        private void ParseNotification(AutomationElement toastElement)
+        {
+            // Обходим внутренние элементы окна для поиска текста
+            var walker = TreeWalker.ControlViewWalker;
+            string appName = "Уведомление";
+            string title = "";
+            string message = "";
+
+            var child = walker.GetFirstChild(toastElement);
+            List<string> textLines = new List<string>();
+
+            ExtractText(child, walker, textLines);
+
+            if (textLines.Count > 0)
+            {
+                // Обычно первый элемент - название приложения, второй - заголовок, третий - текст
+                appName = textLines[0];
+                if (textLines.Count > 1) title = textLines[1];
+                if (textLines.Count > 2) message = textLines[2];
+                else if (textLines.Count > 1) { message = title; title = ""; }
+
+                TriggerNotification(appName, title, message);
+            }
+        }
+
+        private void ExtractText(AutomationElement node, TreeWalker walker, List<string> output)
+        {
+            if (node == null) return;
+
+            try
+            {
+                if (node.Current.ControlType == ControlType.Text)
+                {
+                    string text = node.Current.Name;
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        output.Add(text.Trim());
+                    }
+                }
+            }
+            catch (ElementNotAvailableException) {}
+
+            var child = walker.GetFirstChild(node);
+            while (child != null)
+            {
+                ExtractText(child, walker, output);
+                try { child = walker.GetNextSibling(child); } catch { break; }
+            }
+        }
+
+        protected void TriggerNotification(string appName, string title, string message)
+        {
+            OnNotificationReceived?.Invoke(appName, title, message);
         }
     }
 }

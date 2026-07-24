@@ -12,6 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
+  </ItemGroup>
+
+  <ItemGroup>
     <SupportedOSPlatformVersion Include="10.0.19041.0" />
   </ItemGroup>
 
