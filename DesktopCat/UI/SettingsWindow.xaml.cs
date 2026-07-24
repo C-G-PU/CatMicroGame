@@ -14,6 +14,7 @@ namespace DesktopCat.UI
             InitializeComponent();
             _currentSettings = SettingsManager.Load();
             AppsTextBox.Text = string.Join(", ", _currentSettings.AllowedApps);
+            SizeSlider.Value = _currentSettings.CatSize > 0 ? _currentSettings.CatSize : 120.0;
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -25,6 +26,7 @@ namespace DesktopCat.UI
                 .ToList();
 
             _currentSettings.AllowedApps = apps;
+            _currentSettings.CatSize = SizeSlider.Value;
             SettingsManager.Save(_currentSettings);
 
             this.DialogResult = true;

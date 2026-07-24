@@ -17,9 +17,66 @@
 
     <!-- Главный контейнер -->
     <Grid Background="Transparent">
-        <!-- Временно вместо картинки нарисуем круг как заглушку для котика -->
-        <Ellipse Fill="Orange" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="CatSprite" />
-        <TextBlock Text="Meow!" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+
+        <!-- Картинка котика с анимацией покачивания (теперь пиксельная, без сглаживания) -->
+        <Image x:Name="CatSprite" Source="pack://application:,,,/Assets/cat.png" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="NearestNeighbor">
+            <Image.RenderTransform>
+                <RotateTransform x:Name="CatRotation" Angle="0"/>
+            </Image.RenderTransform>
+            <Image.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard RepeatBehavior="Forever">
+                            <DoubleAnimation Storyboard.TargetName="CatRotation"
+                                             Storyboard.TargetProperty="Angle"
+                                             From="-10" To="10" Duration="0:0:1" AutoReverse="True"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Image.Triggers>
+        </Image>
+
+        <!-- Кнопки управления (скрыты по умолчанию, появляются при наведении) -->
+        <Grid x:Name="ControlButtons" Opacity="0">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=CatSprite}" Value="True">
+                            <Setter Property="Opacity" Value="1"/>
+                        </DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Opacity" Value="1"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <!-- Кнопка "Настройки" (шестеренка справа) -->
+            <Button Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-10,0"
+                    Background="White" BorderBrush="Gray" Cursor="Hand" Click="SettingsBtn_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}"/>
+                            <TextBlock Text="⚙" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Кнопка "Закрыть" (крестик снизу) -->
+            <Button Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,0"
+                    Background="White" BorderBrush="Gray" Cursor="Hand" Click="CloseBtn_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Ellipse Fill="#FF5555" Stroke="{TemplateBinding BorderBrush}"/>
+                            <TextBlock Text="✖" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="10" Margin="0,-2,0,0"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
 
         <!-- Текст уведомления (облачко) -->
         <Border x:Name="NotificationBubble"

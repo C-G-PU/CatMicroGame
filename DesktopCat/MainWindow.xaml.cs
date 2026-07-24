@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using System.Linq;
 using DesktopCat.Services;
 using DesktopCat.UI;
+using Forms = System.Windows.Forms;
 
 namespace DesktopCat
 {
@@ -14,6 +15,7 @@ namespace DesktopCat
         private AppSettings _settings;
         private NotificationService _notificationService;
         private DispatcherTimer _hideBubbleTimer;
+        private Forms.NotifyIcon? _notifyIcon;
 
         public MainWindow()
         {
@@ -30,12 +32,67 @@ namespace DesktopCat
                 _hideBubbleTimer.Stop();
             };
 
+            SetupTrayIcon();
+
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
         }
 
+        private void SetupTrayIcon()
+        {
+            _notifyIcon = new Forms.NotifyIcon();
+            _notifyIcon.Icon = System.Drawing.SystemIcons.Application; // Временно дефолтная иконка
+            _notifyIcon.Visible = true;
+            _notifyIcon.Text = "Desktop Cat";
+
+            var contextMenu = new Forms.ContextMenuStrip();
+
+            var settingsItem = new Forms.ToolStripMenuItem("Настройки");
+            settingsItem.Click += (s, e) => OpenSettings();
+
+            var exitItem = new Forms.ToolStripMenuItem("Выход");
+            exitItem.Click += (s, e) => System.Windows.Application.Current.Shutdown();
+
+            contextMenu.Items.Add(settingsItem);
+            contextMenu.Items.Add(new Forms.ToolStripSeparator());
+            contextMenu.Items.Add(exitItem);
+
+            _notifyIcon.ContextMenuStrip = contextMenu;
+        }
+
+        private void OpenSettings()
+        {
+            var sw = new SettingsWindow();
+            if (sw.ShowDialog() == true)
+            {
+                _settings = SettingsManager.Load();
+                ApplySettings();
+            }
+        }
+
+        private void ApplySettings()
+        {
+            double newSize = _settings.CatSize > 0 ? _settings.CatSize : 120.0;
+            this.Width = newSize + 30; // Небольшой запас для кнопок и облачка
+            this.Height = newSize + 30;
+            CatSprite.Width = newSize;
+            CatSprite.Height = newSize;
+        }
+
+        private void SettingsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSettings();
+        }
+
+        private void CloseBtn_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            ApplySettings();
+
             if (_settings.LastX >= 0 && _settings.LastY >= 0)
             {
                 this.Left = _settings.LastX;
@@ -65,6 +122,12 @@ namespace DesktopCat
             _settings.LastX = this.Left;
             _settings.LastY = this.Top;
             SettingsManager.Save(_settings);
+
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Visible = false;
+                _notifyIcon.Dispose();
+            }
         }
 
         private void OnNotificationReceived(string appName, string title, string message)
@@ -117,7 +180,7 @@ namespace DesktopCat
                 };
 
                 MenuItem exitItem = new MenuItem { Header = "Выход" };
-                exitItem.Click += (s, args) => Application.Current.Shutdown();
+                exitItem.Click += (s, args) => System.Windows.Application.Current.Shutdown();
 
                 menu.Items.Add(settingsItem);
                 menu.Items.Add(new Separator());
