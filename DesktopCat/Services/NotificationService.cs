@@ -21,23 +21,32 @@ namespace DesktopCat.Services
 
         public async Task<bool> InitializeAsync()
         {
-            if (!ApiInformation.IsTypePresent("Windows.UI.Notifications.Management.UserNotificationListener"))
+            try
             {
-                return false; // ОС не поддерживает
+                if (!ApiInformation.IsTypePresent("Windows.UI.Notifications.Management.UserNotificationListener"))
+                {
+                    return false; // ОС не поддерживает
+                }
+
+                _listener = UserNotificationListener.Current;
+                var accessStatus = await _listener.RequestAccessAsync();
+
+                if (accessStatus != UserNotificationListenerAccessStatus.Allowed)
+                {
+                    return false; // Нет доступа (пользователь не разрешил)
+                }
+
+                // Подписываемся на события добавления уведомлений
+                _listener.NotificationChanged += Listener_NotificationChanged;
+
+                return true;
             }
-
-            _listener = UserNotificationListener.Current;
-            var accessStatus = await _listener.RequestAccessAsync();
-
-            if (accessStatus != UserNotificationListenerAccessStatus.Allowed)
+            catch (Exception)
             {
-                return false; // Нет доступа (пользователь не разрешил)
+                // При запуске без манифеста / вне UWP-контейнера в некоторых версиях Windows
+                // вызов UserNotificationListener.Current может выбрасывать исключение (System.InvalidOperationException: The process has no package identity).
+                return false;
             }
-
-            // Подписываемся на события добавления уведомлений
-            _listener.NotificationChanged += Listener_NotificationChanged;
-
-            return true;
         }
 
         private async void Listener_NotificationChanged(UserNotificationListener sender, UserNotificationChangedEventArgs args)
