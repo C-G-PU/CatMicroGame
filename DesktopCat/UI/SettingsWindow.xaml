@@ -69,7 +69,6 @@
                     Value="5" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15"/>
 
             <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                <Button Content="Разрешения Windows" Width="150" Margin="0,0,10,0" Click="OpenWindowsSettings_Click" Background="#440055FF"/>
                 <Button Content="Ок" Width="100" Click="Save_Click" Background="#4400AA00"/>
             </StackPanel>
         </Grid>

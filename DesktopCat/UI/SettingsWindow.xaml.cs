@@ -69,21 +69,5 @@ namespace DesktopCat.UI
             this.DialogResult = true;
             this.Close();
         }
-
-        private void OpenWindowsSettings_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "ms-settings:notifications",
-                    UseShellExecute = true
-                });
-            }
-            catch
-            {
-                System.Windows.MessageBox.Show("Не удалось открыть настройки Windows.");
-            }
-        }
     }
 }

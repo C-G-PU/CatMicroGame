@@ -93,7 +93,24 @@ namespace DesktopCat
         private void SetupTrayIcon()
         {
             _notifyIcon = new Forms.NotifyIcon();
-            _notifyIcon.Icon = System.Drawing.SystemIcons.Application; // Временно дефолтная иконка
+
+            try
+            {
+                var iconStream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"))?.Stream;
+                if (iconStream != null)
+                {
+                    _notifyIcon.Icon = new System.Drawing.Icon(iconStream);
+                }
+                else
+                {
+                    _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+                }
+            }
+            catch
+            {
+                _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+            }
+
             _notifyIcon.Visible = true;
             _notifyIcon.Text = "Desktop Cat";
 
