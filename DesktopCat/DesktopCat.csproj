@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,10 @@
 
   <ItemGroup>
     <Resource Include="Assets\cat.png" />
+    <Resource Include="Assets\skitty.png" />
+    <Resource Include="Assets\litten.png" />
+    <Resource Include="Assets\sprigatito.png" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
 </Project>
