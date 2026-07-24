@@ -98,9 +98,6 @@ namespace DesktopCat
         {
             // Возвращаем основную картинку/GIF
             LoadSkin(_settings.CatSkin);
-
-            // Оставляем легкое покачивание как fallback-эффект дыхания
-            StartRotateAnimation(-3, 3, 2.0);
         }
 
         private void SetActiveAnimation()
@@ -110,9 +107,11 @@ namespace DesktopCat
             {
                 LoadSkin(_settings.CatActiveSkin);
             }
-
-            // Если её нет или включено покачивание
-            StartRotateAnimation(-15, 15, 0.4);
+            else
+            {
+                // Fallback, если активного скина нет - просто оставляем текущий
+                LoadSkin(_settings.CatSkin);
+            }
         }
 
         private void LoadSkin(string skinName)
@@ -241,6 +240,9 @@ namespace DesktopCat
             ApplySettings();
             SetIdleAnimation();
 
+            // Запускаем очень медленное и плавное покачивание один раз при старте
+            StartRotateAnimation(-2, 2, 4.0);
+
             if (_settings.LastX >= 0 && _settings.LastY >= 0)
             {
                 this.Left = _settings.LastX;
@@ -291,28 +293,7 @@ namespace DesktopCat
                 _settings.LastY = this.Top;
                 SettingsManager.Save(_settings);
             }
-            else if (e.ChangedButton == MouseButton.Right)
-            {
-                ContextMenu menu = new ContextMenu();
-
-                MenuItem settingsItem = new MenuItem { Header = "Настройки" };
-                settingsItem.Click += (s, args) => {
-                    var sw = new SettingsWindow();
-                    if (sw.ShowDialog() == true)
-                    {
-                        _settings = SettingsManager.Load();
-                    }
-                };
-
-                MenuItem exitItem = new MenuItem { Header = "Выход" };
-                exitItem.Click += (s, args) => System.Windows.Application.Current.Shutdown();
-
-                menu.Items.Add(settingsItem);
-                menu.Items.Add(new Separator());
-                menu.Items.Add(exitItem);
-
-                this.ContextMenu = menu;
-            }
+            // Правый клик теперь обрабатывается через XAML ContextMenu у Image
         }
     }
 }

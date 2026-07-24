@@ -25,6 +25,34 @@
             <Image.RenderTransform>
                 <RotateTransform x:Name="CatRotation" Angle="0"/>
             </Image.RenderTransform>
+            <Image.ContextMenu>
+                <ContextMenu Background="#991A1A1A" BorderBrush="#33FFFFFF" BorderThickness="1" Foreground="White" HasDropShadow="True">
+                    <ContextMenu.Resources>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Padding" Value="10,5"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Border x:Name="Border" Background="Transparent" CornerRadius="3" Margin="2">
+                                            <Grid>
+                                                <ContentPresenter ContentSource="Header" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#44FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ContextMenu.Resources>
+                    <MenuItem Header="Настройки" Click="SettingsBtn_Click"/>
+                    <MenuItem Header="Выход" Click="CloseBtn_Click"/>
+                </ContextMenu>
+            </Image.ContextMenu>
         </Image>
 
         <!-- Кнопки управления (скрыты по умолчанию, появляются при наведении) Glassmorphism -->
