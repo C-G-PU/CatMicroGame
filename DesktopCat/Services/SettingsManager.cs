@@ -9,6 +9,7 @@ namespace DesktopCat.Services
     {
         public List<string> AllowedApps { get; set; } = new List<string>();
         public string CatSkin { get; set; } = "Default";
+        public double CatSize { get; set; } = 120.0;
         public double LastX { get; set; } = -1;
         public double LastY { get; set; } = -1;
     }

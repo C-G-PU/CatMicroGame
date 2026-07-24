@@ -18,8 +18,8 @@
     <!-- Главный контейнер -->
     <Grid Background="Transparent">
 
-        <!-- Картинка котика с анимацией покачивания -->
-        <Image x:Name="CatSprite" Source="pack://application:,,,/Assets/cat.jpg" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5">
+        <!-- Картинка котика с анимацией покачивания (теперь пиксельная, без сглаживания) -->
+        <Image x:Name="CatSprite" Source="pack://application:,,,/Assets/cat.png" Width="120" Height="120" Stretch="Uniform" RenderTransformOrigin="0.5,0.5" RenderOptions.BitmapScalingMode="NearestNeighbor">
             <Image.RenderTransform>
                 <RotateTransform x:Name="CatRotation" Angle="0"/>
             </Image.RenderTransform>
@@ -34,10 +34,6 @@
                     </BeginStoryboard>
                 </EventTrigger>
             </Image.Triggers>
-            <!-- Скругление углов, если исходник не прозрачный (Clip) -->
-            <Image.Clip>
-                <EllipseGeometry RadiusX="60" RadiusY="60" Center="60,60" />
-            </Image.Clip>
         </Image>
 
         <!-- Кнопки управления (скрыты по умолчанию, появляются при наведении) -->

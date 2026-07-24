@@ -66,7 +66,17 @@ namespace DesktopCat
             if (sw.ShowDialog() == true)
             {
                 _settings = SettingsManager.Load();
+                ApplySettings();
             }
+        }
+
+        private void ApplySettings()
+        {
+            double newSize = _settings.CatSize > 0 ? _settings.CatSize : 120.0;
+            this.Width = newSize + 30; // Небольшой запас для кнопок и облачка
+            this.Height = newSize + 30;
+            CatSprite.Width = newSize;
+            CatSprite.Height = newSize;
         }
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
@@ -81,6 +91,8 @@ namespace DesktopCat
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            ApplySettings();
+
             if (_settings.LastX >= 0 && _settings.LastY >= 0)
             {
                 this.Left = _settings.LastX;
