@@ -11,13 +11,22 @@ namespace DesktopCat.UI
 
         private bool _isLoaded = false;
 
-        public SettingsWindow()
+        public SettingsWindow(int tabIndex = 0)
         {
             InitializeComponent();
+            MainTabControl.SelectedIndex = tabIndex;
             _currentSettings = SettingsManager.Load();
 
             SizeSlider.Value = _currentSettings.CatSize > 0 ? _currentSettings.CatSize : 120.0;
             AnimationSlider.Value = _currentSettings.ActiveAnimationDuration > 0 ? _currentSettings.ActiveAnimationDuration : 5;
+            BubbleSlider.Value = _currentSettings.BubbleDurationSeconds > 0 ? _currentSettings.BubbleDurationSeconds : 15;
+
+            // Обновление статистики
+            LevelText.Text = _currentSettings.Level.ToString();
+            ExpBar.Maximum = _currentSettings.Level * 50;
+            ExpBar.Value = _currentSettings.Exp;
+            ExpText.Text = $"{_currentSettings.Exp} / {_currentSettings.Level * 50}";
+            TotalTasksText.Text = _currentSettings.TotalTasksCompleted.ToString();
 
             // Установка текущего персонажа
             foreach (System.Windows.Controls.ComboBoxItem item in CatSkinCombo.Items)
@@ -79,6 +88,31 @@ namespace DesktopCat.UI
             }
             if (CatActiveSkinCombo.SelectedItem == null && CatActiveSkinCombo.Items.Count > 0)
                 CatActiveSkinCombo.SelectedIndex = 0;
+
+            foreach (System.Windows.Controls.ComboBoxItem item in AppThemeCombo.Items)
+            {
+                if (item.Tag?.ToString() == _currentSettings.AppTheme)
+                {
+                    AppThemeCombo.SelectedItem = item;
+                    break;
+                }
+            }
+            if (AppThemeCombo.SelectedItem == null && AppThemeCombo.Items.Count > 0)
+                AppThemeCombo.SelectedIndex = 0;
+
+            ApplyThemeUI();
+        }
+
+        private void ApplyThemeUI()
+        {
+            if (_currentSettings.AppTheme == "Light")
+            {
+                MainBackgroundBorder.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xBB, 0xFF, 0xFF, 0xFF));
+            }
+            else
+            {
+                MainBackgroundBorder.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x99, 0x1A, 0x1A, 0x1A));
+            }
         }
 
         private void AddCustomSkin_Click(object sender, RoutedEventArgs e)
@@ -172,10 +206,45 @@ namespace DesktopCat.UI
 
         private void TaskItem_Changed(object sender, RoutedEventArgs e)
         {
-            if (_isLoaded)
+            if (_isLoaded && sender is System.Windows.Controls.CheckBox cb && cb.DataContext is TodoTask task)
             {
+                if (cb.IsChecked == true)
+                {
+                    _currentSettings.Exp += 10;
+                    _currentSettings.TotalTasksCompleted++;
+                    if (_currentSettings.Exp >= _currentSettings.Level * 50)
+                    {
+                        _currentSettings.Exp -= _currentSettings.Level * 50;
+                        _currentSettings.Level++;
+                    }
+                }
+                else
+                {
+                    _currentSettings.Exp -= 10;
+                    _currentSettings.TotalTasksCompleted--;
+                    if (_currentSettings.Exp < 0 && _currentSettings.Level > 1)
+                    {
+                        _currentSettings.Level--;
+                        _currentSettings.Exp += _currentSettings.Level * 50;
+                    }
+                    if (_currentSettings.Exp < 0) _currentSettings.Exp = 0;
+                    if (_currentSettings.TotalTasksCompleted < 0) _currentSettings.TotalTasksCompleted = 0;
+                }
+
+                // Обновляем статистику в UI
+                LevelText.Text = _currentSettings.Level.ToString();
+                ExpBar.Maximum = _currentSettings.Level * 50;
+                ExpBar.Value = _currentSettings.Exp;
+                ExpText.Text = $"{_currentSettings.Exp} / {_currentSettings.Level * 50}";
+                TotalTasksText.Text = _currentSettings.TotalTasksCompleted.ToString();
+
                 SettingsManager.NotifyLiveUpdate(_currentSettings);
             }
+        }
+
+        private void SyncApi_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.MessageBox.Show("API интеграция в разработке. Дождитесь следующих обновлений!", "Инфо", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
 
         private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -198,6 +267,12 @@ namespace DesktopCat.UI
                 _currentSettings.CatActiveSkin = selectedActiveItem.Tag?.ToString() ?? "";
             }
 
+            if (AppThemeCombo.SelectedItem is System.Windows.Controls.ComboBoxItem themeItem)
+            {
+                _currentSettings.AppTheme = themeItem.Tag?.ToString() ?? "Dark";
+                ApplyThemeUI();
+            }
+
             _currentSettings.CatSize = SizeSlider.Value;
 
             // Уведомляем главное окно о временных изменениях без записи в файл
@@ -208,6 +283,8 @@ namespace DesktopCat.UI
         {
             _currentSettings.CatSize = SizeSlider.Value;
             _currentSettings.ActiveAnimationDuration = (int)AnimationSlider.Value;
+            _currentSettings.BubbleDurationSeconds = (int)BubbleSlider.Value;
+
             if (CatSkinCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem)
             {
                 _currentSettings.CatSkin = selectedItem.Tag.ToString() ?? "cat.png";
@@ -215,6 +292,10 @@ namespace DesktopCat.UI
             if (CatActiveSkinCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedActiveItem)
             {
                 _currentSettings.CatActiveSkin = selectedActiveItem.Tag?.ToString() ?? "";
+            }
+            if (AppThemeCombo.SelectedItem is System.Windows.Controls.ComboBoxItem themeItem2)
+            {
+                _currentSettings.AppTheme = themeItem2.Tag?.ToString() ?? "Dark";
             }
 
             SettingsManager.Save(_currentSettings);

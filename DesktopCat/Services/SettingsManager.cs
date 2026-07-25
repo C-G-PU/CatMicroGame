@@ -15,6 +15,17 @@ namespace DesktopCat.Services
         public double LastX { get; set; } = -1;
         public double LastY { get; set; } = -1;
         public int ActiveAnimationDuration { get; set; } = 5;
+
+        // Геймификация и новые настройки
+        public int Level { get; set; } = 1;
+        public int Exp { get; set; } = 0;
+        public int TotalTasksCompleted { get; set; } = 0;
+        public int BubbleDurationSeconds { get; set; } = 15;
+        public bool IsSoundEnabled { get; set; } = true;
+        public bool AreNotificationsEnabled { get; set; } = true;
+
+        // Тема приложения: "Dark" (по умолчанию, Glassmorphism) или "Light"
+        public string AppTheme { get; set; } = "Dark";
     }
 
     public static class SettingsManager

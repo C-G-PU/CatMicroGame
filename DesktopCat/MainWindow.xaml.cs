@@ -20,6 +20,8 @@ namespace DesktopCat
         private DispatcherTimer _schedulerTimer;
         private Forms.NotifyIcon? _notifyIcon;
         private Storyboard? _currentAnimation;
+        private TodoTask? _currentActiveTask;
+        private System.Collections.Generic.Queue<TodoTask> _notificationQueue = new System.Collections.Generic.Queue<TodoTask>();
 
         public MainWindow()
         {
@@ -34,10 +36,11 @@ namespace DesktopCat
             };
 
             _hideBubbleTimer = new DispatcherTimer();
-            _hideBubbleTimer.Interval = TimeSpan.FromSeconds(5);
             _hideBubbleTimer.Tick += (s, e) => {
                 NotificationBubble.Visibility = Visibility.Collapsed;
+                _currentActiveTask = null;
                 _hideBubbleTimer.Stop();
+                CheckNotificationQueue();
             };
 
             _animationTimer = new DispatcherTimer();
@@ -79,10 +82,14 @@ namespace DesktopCat
                     task.ScheduledTime.Minute == now.Minute &&
                     task.ScheduledTime.Date <= now.Date)
                 {
-                    // Время пришло! Показываем задачу
-                    ShowBubble($"Напоминание:\n{task.Title}");
+                    if (_settings.AreNotificationsEnabled)
+                    {
+                        // Добавляем в очередь
+                        _notificationQueue.Enqueue(task);
+                    }
 
-                    // Отмечаем как выполненную, чтобы не спамить
+                    // Отмечаем как "временно" показанную (чтобы таймер не спамил каждую секунду)
+                    // Но по-настоящему Completed она станет при нажатии галочки (или останется висеть в списке)
                     task.IsCompleted = true;
                     settingsChanged = true;
                 }
@@ -91,6 +98,25 @@ namespace DesktopCat
             if (settingsChanged)
             {
                 SettingsManager.Save(_settings);
+            }
+
+            CheckNotificationQueue();
+        }
+
+        private void CheckNotificationQueue()
+        {
+            // Если пузырь сейчас пуст и в очереди есть задачи
+            if (_currentActiveTask == null && _notificationQueue.Count > 0)
+            {
+                var nextTask = _notificationQueue.Dequeue();
+                _currentActiveTask = nextTask;
+                ShowBubble($"Напоминание:\n{nextTask.Title}", true);
+
+                // Воспроизводим звук если включен
+                if (_settings.IsSoundEnabled)
+                {
+                    System.Media.SystemSounds.Exclamation.Play();
+                }
             }
         }
 
@@ -204,9 +230,9 @@ namespace DesktopCat
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
 
-        private void OpenSettings()
+        private void OpenSettings(int tabIndex = 0)
         {
-            var sw = new SettingsWindow();
+            var sw = new SettingsWindow(tabIndex);
             if (sw.ShowDialog() == true)
             {
                 _settings = SettingsManager.Load();
@@ -217,8 +243,8 @@ namespace DesktopCat
         private void ApplySettings()
         {
             double newSize = _settings.CatSize > 0 ? _settings.CatSize : 120.0;
-            this.Width = newSize + 30; // Небольшой запас для кнопок и облачка
-            this.Height = newSize + 30;
+            this.Width = newSize + 150; // Увеличенный запас для широких облачков текста
+            this.Height = newSize + 150; // Значительный запас сверху для всплывающего облачка уведомлений и анимации сердечек
             CatSprite.Width = newSize;
             CatSprite.Height = newSize;
 
@@ -271,10 +297,13 @@ namespace DesktopCat
             }
         }
 
-        private void ShowBubble(string text)
+        private void ShowBubble(string text, bool showActionButtons = false)
         {
             NotificationText.Text = text;
+            NotificationActionPanel.Visibility = showActionButtons ? Visibility.Visible : Visibility.Collapsed;
             NotificationBubble.Visibility = Visibility.Visible;
+
+            _hideBubbleTimer.Interval = TimeSpan.FromSeconds(_settings.BubbleDurationSeconds > 0 ? _settings.BubbleDurationSeconds : 15);
             _hideBubbleTimer.Stop();
             _hideBubbleTimer.Start();
 
@@ -284,16 +313,176 @@ namespace DesktopCat
             _animationTimer.Start();
         }
 
+        private void NotifCompleteBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentActiveTask != null)
+            {
+                // Начисляем опыт
+                _settings.Exp += 10;
+                _settings.TotalTasksCompleted++;
+                if (_settings.Exp >= _settings.Level * 50)
+                {
+                    _settings.Exp -= _settings.Level * 50;
+                    _settings.Level++;
+                }
+
+                // Задача уже отмечена как Completed в таймере, если не перманентная - удаляем
+                if (!_currentActiveTask.IsPermanent)
+                {
+                    _settings.TodoList.RemoveAll(t => t.Id == _currentActiveTask.Id);
+                }
+                SettingsManager.Save(_settings);
+            }
+            NotificationBubble.Visibility = Visibility.Collapsed;
+            _hideBubbleTimer.Stop();
+            _currentActiveTask = null;
+            CheckNotificationQueue();
+        }
+
+        private void NotifCloseBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentActiveTask != null)
+            {
+                // Если просто закрыли, задача считается невыполненной (остается в календаре красной/неактивной)
+                _currentActiveTask.IsCompleted = false;
+                SettingsManager.Save(_settings);
+            }
+            NotificationBubble.Visibility = Visibility.Collapsed;
+            _hideBubbleTimer.Stop();
+            _currentActiveTask = null;
+            CheckNotificationQueue();
+        }
+
+        private bool _isDragging = false;
+        private System.Windows.Point _startPoint;
+
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
             {
-                this.DragMove();
-                _settings.LastX = this.Left;
-                _settings.LastY = this.Top;
-                SettingsManager.Save(_settings);
+                _isDragging = false;
+                _startPoint = e.GetPosition(this);
+                RadialMenuPopup.IsOpen = false;
+                this.CaptureMouse();
             }
-            // Правый клик теперь обрабатывается через XAML ContextMenu у Image
+            else if (e.ChangedButton == MouseButton.Right)
+            {
+                if (RadialMenuPopup.IsOpen)
+                {
+                    RadialMenuPopup.IsOpen = false;
+                }
+                else
+                {
+                    PositionRadialButtons();
+                    RadialMenuPopup.IsOpen = true;
+                }
+            }
+        }
+
+        private void Window_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && this.IsMouseCaptured)
+            {
+                System.Windows.Point currentPoint = e.GetPosition(this);
+                if (Math.Abs(currentPoint.X - _startPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(currentPoint.Y - _startPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    _isDragging = true;
+                    this.ReleaseMouseCapture();
+                    this.DragMove();
+                    _settings.LastX = this.Left;
+                    _settings.LastY = this.Top;
+                    SettingsManager.Save(_settings);
+                }
+            }
+        }
+
+        private void Window_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                this.ReleaseMouseCapture();
+                if (!_isDragging)
+                {
+                    // Это был обычный клик - запускаем анимацию сердечек
+                    ShowHeartsEffect();
+                }
+                _isDragging = false;
+            }
+        }
+
+        private void ShowHeartsEffect()
+        {
+            var opacityAnim = new DoubleAnimation { From = 1, To = 0, Duration = TimeSpan.FromSeconds(1.5) };
+            var moveAnim = new DoubleAnimation { From = 0, To = -30, Duration = TimeSpan.FromSeconds(1.5) };
+
+            HeartsEffect.BeginAnimation(UIElement.OpacityProperty, opacityAnim);
+            HeartsTransform.BeginAnimation(TranslateTransform.YProperty, moveAnim);
+
+            // Если включен звук, можно добавить мурчание
+        }
+
+        private void PositionRadialButtons()
+        {
+            // Обновляем цвета кнопок в зависимости от статуса настроек
+            BtnRadNotif.Foreground = _settings.AreNotificationsEnabled ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGreen) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+            BtnRadSound.Foreground = _settings.IsSoundEnabled ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGreen) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+
+            // Радиус круга, по которому располагаются кнопки
+            double radius = 70;
+            // Центр Canvas
+            double centerX = 100; // Половина Width (200)
+            double centerY = 100; // Половина Height (200)
+
+            var buttons = new[] { BtnRadSettings, BtnRadCalendar, BtnRadStats, BtnRadNotif, BtnRadSound, BtnRadExit };
+            double angleStep = 2 * Math.PI / buttons.Length;
+            // Сдвигаем начальный угол, чтобы первая кнопка была сверху
+            double startAngle = -Math.PI / 2;
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var btn = buttons[i];
+                double angle = startAngle + i * angleStep;
+
+                // Вычисляем координаты X и Y
+                double x = centerX + radius * Math.Cos(angle) - (btn.Width / 2);
+                double y = centerY + radius * Math.Sin(angle) - (btn.Height / 2);
+
+                System.Windows.Controls.Canvas.SetLeft(btn, x);
+                System.Windows.Controls.Canvas.SetTop(btn, y);
+            }
+        }
+
+        private void RadialSettings_Click(object sender, RoutedEventArgs e)
+        {
+            RadialMenuPopup.IsOpen = false;
+            OpenSettings(1); // 1 = Вкладка настроек/внешнего вида
+        }
+
+        private void RadialCalendar_Click(object sender, RoutedEventArgs e)
+        {
+            RadialMenuPopup.IsOpen = false;
+            OpenSettings(0); // 0 = Вкладка задач
+        }
+
+        private void RadialStats_Click(object sender, RoutedEventArgs e)
+        {
+            RadialMenuPopup.IsOpen = false;
+            OpenSettings(2); // 2 = Вкладка статистики
+        }
+
+        private void RadialNotif_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.AreNotificationsEnabled = !_settings.AreNotificationsEnabled;
+            BtnRadNotif.Foreground = _settings.AreNotificationsEnabled ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGreen) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+            SettingsManager.Save(_settings);
+        }
+
+        private void RadialSound_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.IsSoundEnabled = !_settings.IsSoundEnabled;
+            BtnRadSound.Foreground = _settings.IsSoundEnabled ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGreen) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+            SettingsManager.Save(_settings);
         }
     }
 }
