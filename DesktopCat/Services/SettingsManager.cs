@@ -14,7 +14,7 @@ namespace DesktopCat.Services
         public double CatSize { get; set; } = 120.0;
         public double LastX { get; set; } = -1;
         public double LastY { get; set; } = -1;
-        public int ActiveAnimationDuration { get; set; } = 5;
+        public int ActiveAnimationDuration { get; set; } = 10;
 
         // Геймификация и новые настройки
         public int Level { get; set; } = 1;

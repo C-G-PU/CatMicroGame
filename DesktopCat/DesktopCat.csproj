@@ -23,6 +23,7 @@
     <Resource Include="Assets\cat1.png" />
     <Resource Include="Assets\Cat1Anim1.gif" />
     <Resource Include="Assets\Cat1Anim2.gif" />
+    <Resource Include="Assets\cat1Anim3.gif" />
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
