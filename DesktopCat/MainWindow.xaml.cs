@@ -22,6 +22,8 @@ namespace DesktopCat
         private Storyboard? _currentAnimation;
         private TodoTask? _currentActiveTask;
         private System.Collections.Generic.Queue<TodoTask> _notificationQueue = new System.Collections.Generic.Queue<TodoTask>();
+        private DispatcherTimer _leftClickAnimTimer;
+        private DateTime _lastLeftClickAnimTime = DateTime.MinValue;
 
         public MainWindow()
         {
@@ -53,6 +55,13 @@ namespace DesktopCat
             _schedulerTimer.Interval = TimeSpan.FromSeconds(30); // Проверка каждые 30 сек
             _schedulerTimer.Tick += SchedulerTimer_Tick;
             _schedulerTimer.Start();
+
+            _leftClickAnimTimer = new DispatcherTimer();
+            _leftClickAnimTimer.Interval = TimeSpan.FromSeconds(10);
+            _leftClickAnimTimer.Tick += (s, e) => {
+                SetIdleAnimation();
+                _leftClickAnimTimer.Stop();
+            };
 
             SetupTrayIcon();
 
@@ -243,8 +252,8 @@ namespace DesktopCat
         private void ApplySettings()
         {
             double newSize = _settings.CatSize > 0 ? _settings.CatSize : 120.0;
-            this.Width = newSize + 150; // Увеличенный запас для широких облачков текста
-            this.Height = newSize + 150; // Значительный запас сверху для всплывающего облачка уведомлений и анимации сердечек
+            this.Width = newSize + 250; // Увеличенный запас для широких облачков текста
+            this.Height = newSize + 250; // Значительный запас сверху для всплывающего облачка уведомлений и анимации
             CatSprite.Width = newSize;
             CatSprite.Height = newSize;
 
@@ -404,22 +413,18 @@ namespace DesktopCat
                 this.ReleaseMouseCapture();
                 if (!_isDragging)
                 {
-                    // Это был обычный клик - запускаем анимацию сердечек
-                    ShowHeartsEffect();
+                    // Это был обычный клик - запускаем новую анимацию, если прошло 5 сек
+                    if ((DateTime.Now - _lastLeftClickAnimTime).TotalSeconds >= 5)
+                    {
+                        _lastLeftClickAnimTime = DateTime.Now;
+                        LoadSkin("cat1Anim3.gif");
+
+                        _leftClickAnimTimer.Stop();
+                        _leftClickAnimTimer.Start();
+                    }
                 }
                 _isDragging = false;
             }
-        }
-
-        private void ShowHeartsEffect()
-        {
-            var opacityAnim = new DoubleAnimation { From = 1, To = 0, Duration = TimeSpan.FromSeconds(1.5) };
-            var moveAnim = new DoubleAnimation { From = 0, To = -30, Duration = TimeSpan.FromSeconds(1.5) };
-
-            HeartsEffect.BeginAnimation(UIElement.OpacityProperty, opacityAnim);
-            HeartsTransform.BeginAnimation(TranslateTransform.YProperty, moveAnim);
-
-            // Если включен звук, можно добавить мурчание
         }
 
         private void PositionRadialButtons()

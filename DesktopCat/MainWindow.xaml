@@ -29,15 +29,8 @@
             </Image.RenderTransform>
         </Image>
 
-        <!-- Эффект сердечек (появляется при клике) -->
-        <TextBlock x:Name="HeartsEffect" Text="❤" Foreground="#FFFF3366" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-20,0,0" Opacity="0" Panel.ZIndex="5">
-            <TextBlock.RenderTransform>
-                <TranslateTransform x:Name="HeartsTransform" Y="0"/>
-            </TextBlock.RenderTransform>
-        </TextBlock>
-
         <!-- Круговое меню (Radial Menu) -->
-        <Popup x:Name="RadialMenuPopup" StaysOpen="False" AllowsTransparency="True" Placement="Center" PlacementTarget="{Binding ElementName=CatSprite}">
+        <Popup x:Name="RadialMenuPopup" StaysOpen="True" AllowsTransparency="True" Placement="Center" PlacementTarget="{Binding ElementName=CatSprite}">
             <Grid Width="200" Height="200">
                 <!-- Обертка для кнопок, чтобы располагать их по кругу -->
                 <Canvas x:Name="RadialCanvas" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -87,7 +80,7 @@
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="5"
-                Margin="0,-20,0,0"
+                Margin="0,20,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 Visibility="Collapsed"

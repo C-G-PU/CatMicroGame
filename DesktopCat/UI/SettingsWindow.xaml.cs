@@ -18,7 +18,7 @@ namespace DesktopCat.UI
             _currentSettings = SettingsManager.Load();
 
             SizeSlider.Value = _currentSettings.CatSize > 0 ? _currentSettings.CatSize : 120.0;
-            AnimationSlider.Value = _currentSettings.ActiveAnimationDuration > 0 ? _currentSettings.ActiveAnimationDuration : 5;
+            AnimationSlider.Value = _currentSettings.ActiveAnimationDuration >= 10 ? _currentSettings.ActiveAnimationDuration : 10;
             BubbleSlider.Value = _currentSettings.BubbleDurationSeconds > 0 ? _currentSettings.BubbleDurationSeconds : 15;
 
             // Обновление статистики

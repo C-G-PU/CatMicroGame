@@ -142,8 +142,8 @@
                                 Value="120" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
 
                         <TextBlock Grid.Row="6" Text="Длительность активной анимации (сек):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="AnimationSlider" Grid.Row="7" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True"
-                                Value="5" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15"/>
+                        <Slider x:Name="AnimationSlider" Grid.Row="7" Minimum="10" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True"
+                                Value="10" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15"/>
 
                         <TextBlock Grid.Row="8" Text="Длительность показа уведомления (сек):" FontWeight="Bold" Margin="0,0,0,5"/>
                         <Slider x:Name="BubbleSlider" Grid.Row="9" Minimum="5" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True"
