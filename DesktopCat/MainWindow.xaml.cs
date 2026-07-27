@@ -257,6 +257,15 @@ namespace DesktopCat
             CatSprite.Width = newSize;
             CatSprite.Height = newSize;
 
+            DevModeBorder.Visibility = _settings.IsDevMode ? Visibility.Visible : Visibility.Hidden;
+
+            // Применяем настройки облачка
+            double scale = (_settings.CloudSize > 0 ? _settings.CloudSize : 200.0) / 200.0;
+            CloudScale.ScaleX = scale;
+            CloudScale.ScaleY = scale;
+            CloudTransform.X = _settings.CloudOffsetX;
+            CloudTransform.Y = _settings.CloudOffsetY;
+
             LoadSkin(_settings.CatSkin);
         }
 
@@ -320,6 +329,21 @@ namespace DesktopCat
             _animationTimer.Interval = TimeSpan.FromSeconds(_settings.ActiveAnimationDuration > 0 ? _settings.ActiveAnimationDuration : 5);
             _animationTimer.Stop();
             _animationTimer.Start();
+
+            StartCloudBobbingAnimation();
+        }
+
+        private void StartCloudBobbingAnimation()
+        {
+            var bobbingAnim = new DoubleAnimation
+            {
+                From = -5,
+                To = 5,
+                Duration = TimeSpan.FromSeconds(1.5),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            CloudBobbingTransform.BeginAnimation(TranslateTransform.YProperty, bobbingAnim);
         }
 
         private void NotifCompleteBtn_Click(object sender, RoutedEventArgs e)
@@ -436,8 +460,8 @@ namespace DesktopCat
             // Радиус круга, по которому располагаются кнопки
             double radius = 70;
             // Центр Canvas
-            double centerX = 100; // Половина Width (200)
-            double centerY = 100; // Половина Height (200)
+            double centerX = 150; // Половина Width (300)
+            double centerY = 150; // Половина Height (300)
 
             var buttons = new[] { BtnRadSettings, BtnRadCalendar, BtnRadStats, BtnRadNotif, BtnRadSound, BtnRadExit };
             double angleStep = 2 * Math.PI / buttons.Length;

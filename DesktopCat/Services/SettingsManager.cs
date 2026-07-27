@@ -24,6 +24,11 @@ namespace DesktopCat.Services
         public bool IsSoundEnabled { get; set; } = true;
         public bool AreNotificationsEnabled { get; set; } = true;
 
+        public double CloudSize { get; set; } = 200.0;
+        public double CloudOffsetX { get; set; } = 0.0;
+        public double CloudOffsetY { get; set; } = 0.0;
+        public bool IsDevMode { get; set; } = false;
+
         // Тема приложения: "Dark" (по умолчанию, Glassmorphism) или "Light"
         public string AppTheme { get; set; } = "Dark";
     }

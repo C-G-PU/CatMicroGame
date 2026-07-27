@@ -19,6 +19,7 @@
         MouseUp="Window_MouseUp">
 
     <!-- Главный контейнер -->
+    <Border x:Name="DevModeBorder" BorderThickness="1" BorderBrush="Red" Visibility="Hidden">
     <Grid Background="Transparent">
 
         <!-- Картинка котика с анимацией покачивания (теперь пиксельная, без сглаживания) -->
@@ -31,7 +32,7 @@
 
         <!-- Круговое меню (Radial Menu) -->
         <Popup x:Name="RadialMenuPopup" StaysOpen="True" AllowsTransparency="True" Placement="Center" PlacementTarget="{Binding ElementName=CatSprite}">
-            <Grid Width="200" Height="200">
+            <Grid Width="300" Height="300">
                 <!-- Обертка для кнопок, чтобы располагать их по кругу -->
                 <Canvas x:Name="RadialCanvas" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Canvas.Resources>
@@ -74,26 +75,33 @@
 
 
         <!-- Текст уведомления (облачко) -->
-        <Border x:Name="NotificationBubble"
-                Background="White"
-                BorderBrush="Gray"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="5"
-                Margin="0,20,0,0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                Visibility="Collapsed"
-                Panel.ZIndex="10">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock x:Name="NotificationText" Text="Notification text" MaxWidth="150" TextWrapping="Wrap" Foreground="Black" Margin="5"/>
+        <Grid x:Name="NotificationBubble"
+              Margin="0,20,0,0"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Visibility="Collapsed"
+              Panel.ZIndex="10">
+
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="CloudScale" ScaleX="1" ScaleY="1" />
+                    <TranslateTransform x:Name="CloudTransform" X="0" Y="0" />
+                    <TranslateTransform x:Name="CloudBobbingTransform" X="0" Y="0" />
+                </TransformGroup>
+            </Grid.RenderTransform>
+
+            <!-- Фон облачка (пиксельный GIF) -->
+            <Image gif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/cloud.gif"
+                   Width="200" Height="200" x:Name="CloudImage"
+                   Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="NearestNeighbor" />
+
+            <!-- Контент (текст и кнопки), слегка смещенный вверх, чтобы быть в центре самого облачка -->
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-15,0,0">
+                <TextBlock x:Name="NotificationText" Text="Notification text" MaxWidth="150" TextWrapping="Wrap" Foreground="Black" TextAlignment="Center" Margin="5"/>
 
                 <!-- Кнопки действия для уведомления (✔ и ✖) -->
-                <StackPanel x:Name="NotificationActionPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0" Visibility="Collapsed">
+                <StackPanel x:Name="NotificationActionPanel" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0" Visibility="Collapsed">
                     <Button Content="✔" Width="25" Height="25" Margin="0,0,10,0" Background="#4400AA00" Foreground="White" BorderBrush="Transparent" Cursor="Hand" Click="NotifCompleteBtn_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
@@ -113,7 +121,8 @@
                         </Button.Template>
                     </Button>
                 </StackPanel>
-            </Grid>
-        </Border>
+            </StackPanel>
+        </Grid>
     </Grid>
+    </Border>
 </Window>
