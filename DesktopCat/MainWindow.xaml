@@ -19,7 +19,7 @@
         MouseUp="Window_MouseUp">
 
     <!-- Главный контейнер -->
-    <Border x:Name="DevModeBorder" BorderThickness="1" BorderBrush="Red" Visibility="Hidden">
+    <Border x:Name="DevModeBorder" BorderThickness="1" BorderBrush="Transparent" Visibility="Visible">
     <Grid Background="Transparent">
 
         <!-- Картинка котика с анимацией покачивания (теперь пиксельная, без сглаживания) -->
