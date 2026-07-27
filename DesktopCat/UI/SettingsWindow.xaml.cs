@@ -21,6 +21,12 @@ namespace DesktopCat.UI
             AnimationSlider.Value = _currentSettings.ActiveAnimationDuration >= 10 ? _currentSettings.ActiveAnimationDuration : 10;
             BubbleSlider.Value = _currentSettings.BubbleDurationSeconds > 0 ? _currentSettings.BubbleDurationSeconds : 15;
 
+            SoundCheck.IsChecked = _currentSettings.IsSoundEnabled;
+            DevModeCheck.IsChecked = _currentSettings.IsDevMode;
+            CloudSizeSlider.Value = _currentSettings.CloudSize;
+            CloudOffsetXSlider.Value = _currentSettings.CloudOffsetX;
+            CloudOffsetYSlider.Value = _currentSettings.CloudOffsetY;
+
             // Обновление статистики
             LevelText.Text = _currentSettings.Level.ToString();
             ExpBar.Maximum = _currentSettings.Level * 50;
@@ -275,6 +281,12 @@ namespace DesktopCat.UI
 
             _currentSettings.CatSize = SizeSlider.Value;
 
+            _currentSettings.CloudSize = CloudSizeSlider.Value;
+            _currentSettings.CloudOffsetX = CloudOffsetXSlider.Value;
+            _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
+            _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
+            _currentSettings.IsSoundEnabled = SoundCheck.IsChecked ?? true;
+
             // Уведомляем главное окно о временных изменениях без записи в файл
             SettingsManager.NotifyLiveUpdate(_currentSettings);
         }
@@ -284,6 +296,12 @@ namespace DesktopCat.UI
             _currentSettings.CatSize = SizeSlider.Value;
             _currentSettings.ActiveAnimationDuration = (int)AnimationSlider.Value;
             _currentSettings.BubbleDurationSeconds = (int)BubbleSlider.Value;
+
+            _currentSettings.CloudSize = CloudSizeSlider.Value;
+            _currentSettings.CloudOffsetX = CloudOffsetXSlider.Value;
+            _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
+            _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
+            _currentSettings.IsSoundEnabled = SoundCheck.IsChecked ?? true;
 
             if (CatSkinCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem)
             {

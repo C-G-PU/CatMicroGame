@@ -157,6 +157,39 @@
                     </Grid>
                 </TabItem>
 
+                <!-- Вкладка Уведомлений / Облачка -->
+                <TabItem Header="Уведомления" Foreground="Black">
+                    <Grid Margin="0,10,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <CheckBox x:Name="SoundCheck" Grid.Row="0" Content="Звуковое уведомление" Foreground="White" Margin="0,0,0,10"/>
+                        <CheckBox x:Name="DevModeCheck" Grid.Row="1" Content="Режим разработчика (границы окна)" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
+
+                        <TextBlock Grid.Row="2" Text="Размер облачка:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="CloudSizeSlider" Grid.Row="3" Minimum="100" Maximum="400" TickFrequency="10" IsSnapToTickEnabled="True"
+                                Value="200" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                        <TextBlock Grid.Row="4" Text="Смещение облачка по горизонтали (X):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="CloudOffsetXSlider" Grid.Row="5" Minimum="-100" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
+                                Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                        <TextBlock Grid.Row="6" Text="Смещение облачка по вертикали (Y):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="CloudOffsetYSlider" Grid.Row="7" Minimum="-150" Maximum="150" TickFrequency="5" IsSnapToTickEnabled="True"
+                                Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+                    </Grid>
+                </TabItem>
+
                 <!-- Вкладка Статистики -->
                 <TabItem Header="Статистика" Foreground="Black">
                     <Grid Margin="0,10,0,0">
