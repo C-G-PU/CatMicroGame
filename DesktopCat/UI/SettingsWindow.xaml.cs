@@ -17,10 +17,11 @@ namespace DesktopCat.UI
             MainTabControl.SelectedIndex = tabIndex;
             _currentSettings = SettingsManager.Load();
 
-            SizeSlider.Value = _currentSettings.CatSize > 0 ? _currentSettings.CatSize : 120.0;
+            SizeSlider.Value = _currentSettings.CatSize > 0 ? _currentSettings.CatSize : 150.0;
             AnimationSlider.Value = _currentSettings.ActiveAnimationDuration >= 10 ? _currentSettings.ActiveAnimationDuration : 10;
             BubbleSlider.Value = _currentSettings.BubbleDurationSeconds > 0 ? _currentSettings.BubbleDurationSeconds : 15;
 
+            NotificationsCheck.IsChecked = _currentSettings.AreNotificationsEnabled;
             SoundCheck.IsChecked = _currentSettings.IsSoundEnabled;
             DevModeCheck.IsChecked = _currentSettings.IsDevMode;
             CloudSizeSlider.Value = _currentSettings.CloudSize;
@@ -286,9 +287,27 @@ namespace DesktopCat.UI
             _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
             _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
             _currentSettings.IsSoundEnabled = SoundCheck.IsChecked ?? true;
+            _currentSettings.AreNotificationsEnabled = NotificationsCheck.IsChecked ?? true;
 
             // Уведомляем главное окно о временных изменениях без записи в файл
             SettingsManager.NotifyLiveUpdate(_currentSettings);
+        }
+
+        private void CenterCatBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (System.Windows.Application.Current.MainWindow is DesktopCat.MainWindow mw)
+            {
+                mw.CenterCatOnScreen();
+            }
+        }
+
+        private void TestBubble_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_isLoaded) return;
+            if (System.Windows.Application.Current.MainWindow is DesktopCat.MainWindow mw)
+            {
+                mw.ToggleTestBubble(TestBubbleCheck.IsChecked ?? false);
+            }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -302,6 +321,7 @@ namespace DesktopCat.UI
             _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
             _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
             _currentSettings.IsSoundEnabled = SoundCheck.IsChecked ?? true;
+            _currentSettings.AreNotificationsEnabled = NotificationsCheck.IsChecked ?? true;
 
             if (CatSkinCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem)
             {
