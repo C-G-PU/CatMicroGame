@@ -34,7 +34,7 @@
         <Popup x:Name="RadialMenuPopup" StaysOpen="True" AllowsTransparency="True" Placement="Center" PlacementTarget="{Binding ElementName=CatSprite}">
             <Grid Width="300" Height="300">
                 <!-- Обертка для кнопок, чтобы располагать их по кругу -->
-                <Canvas x:Name="RadialCanvas" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas x:Name="RadialCanvas">
                     <Canvas.Resources>
                         <Style TargetType="Button" x:Key="RadialBtnStyle">
                             <Setter Property="Width" Value="50"/>

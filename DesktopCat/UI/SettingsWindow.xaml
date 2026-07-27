@@ -137,9 +137,16 @@
                             <ComboBoxItem Content="Sleeping Cat (cat1.png)" Tag="cat1.png"/>
                         </ComboBox>
 
-                        <TextBlock Grid.Row="4" Text="Размер котика:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Grid Grid.Row="4" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Размер котика:" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="В центр экрана" Width="100" Padding="2" Click="CenterCatBtn_Click" Background="#440055FF"/>
+                        </Grid>
                         <Slider x:Name="SizeSlider" Grid.Row="5" Minimum="60" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True"
-                                Value="120" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+                                Value="150" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
 
                         <TextBlock Grid.Row="6" Text="Длительность активной анимации (сек):" FontWeight="Bold" Margin="0,0,0,5"/>
                         <Slider x:Name="AnimationSlider" Grid.Row="7" Minimum="10" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True"
@@ -173,19 +180,22 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <CheckBox x:Name="SoundCheck" Grid.Row="0" Content="Звуковое уведомление" Foreground="White" Margin="0,0,0,10"/>
-                        <CheckBox x:Name="DevModeCheck" Grid.Row="1" Content="Режим разработчика (границы окна)" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
+                        <CheckBox x:Name="NotificationsCheck" Grid.Row="0" Content="Включить уведомления" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
+                        <CheckBox x:Name="SoundCheck" Grid.Row="1" Content="Звуковое уведомление" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
+                        <CheckBox x:Name="DevModeCheck" Grid.Row="2" Content="Режим разработчика (границы окна)" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
 
-                        <TextBlock Grid.Row="2" Text="Размер облачка:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudSizeSlider" Grid.Row="3" Minimum="100" Maximum="400" TickFrequency="10" IsSnapToTickEnabled="True"
+                        <CheckBox x:Name="TestBubbleCheck" Grid.Row="3" Content="Показать облачко для настройки" Foreground="White" Margin="0,0,0,15" Checked="TestBubble_Changed" Unchecked="TestBubble_Changed"/>
+
+                        <TextBlock Grid.Row="4" Text="Размер облачка:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="CloudSizeSlider" Grid.Row="5" Minimum="100" Maximum="400" TickFrequency="10" IsSnapToTickEnabled="True"
                                 Value="200" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
 
-                        <TextBlock Grid.Row="4" Text="Смещение облачка по горизонтали (X):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudOffsetXSlider" Grid.Row="5" Minimum="-100" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
+                        <TextBlock Grid.Row="6" Text="Смещение облачка по горизонтали (X):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="CloudOffsetXSlider" Grid.Row="7" Minimum="-100" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
                                 Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
 
-                        <TextBlock Grid.Row="6" Text="Смещение облачка по вертикали (Y):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudOffsetYSlider" Grid.Row="7" Minimum="-150" Maximum="150" TickFrequency="5" IsSnapToTickEnabled="True"
+                        <TextBlock Grid.Row="8" Text="Смещение облачка по вертикали (Y):" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <Slider x:Name="CloudOffsetYSlider" Grid.Row="9" Minimum="-150" Maximum="150" TickFrequency="5" IsSnapToTickEnabled="True"
                                 Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
                     </Grid>
                 </TabItem>

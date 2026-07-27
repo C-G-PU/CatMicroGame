@@ -11,7 +11,7 @@ namespace DesktopCat.Services
         public string CatSkin { get; set; } = "Cat1Anim1.gif"; // Новое дефолтное видео
         public string CatActiveSkin { get; set; } = "Cat1Anim2.gif"; // Опционально второе видео для уведомлений
         public List<string> CustomSkins { get; set; } = new List<string>();
-        public double CatSize { get; set; } = 120.0;
+        public double CatSize { get; set; } = 150.0;
         public double LastX { get; set; } = -1;
         public double LastY { get; set; } = -1;
         public int ActiveAnimationDuration { get; set; } = 10;

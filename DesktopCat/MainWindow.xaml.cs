@@ -251,7 +251,7 @@ namespace DesktopCat
 
         private void ApplySettings()
         {
-            double newSize = _settings.CatSize > 0 ? _settings.CatSize : 120.0;
+            double newSize = _settings.CatSize > 0 ? _settings.CatSize : 150.0;
             this.Width = newSize + 250; // Увеличенный запас для широких облачков текста
             this.Height = newSize + 250; // Значительный запас сверху для всплывающего облачка уведомлений и анимации
             CatSprite.Width = newSize;
@@ -265,6 +265,8 @@ namespace DesktopCat
             CloudScale.ScaleY = scale;
             CloudTransform.X = _settings.CloudOffsetX;
             CloudTransform.Y = _settings.CloudOffsetY;
+
+            CatSprite.Opacity = _settings.AreNotificationsEnabled ? 1.0 : 0.5;
 
             LoadSkin(_settings.CatSkin);
         }
@@ -294,12 +296,20 @@ namespace DesktopCat
             }
             else
             {
-                var desktopWorkingArea = SystemParameters.WorkArea;
-                this.Left = desktopWorkingArea.Right - this.Width - 50;
-                this.Top = desktopWorkingArea.Bottom - this.Height;
+                CenterCatOnScreen();
             }
 
             ShowBubble("Мяу! Я готов.");
+        }
+
+        public void CenterCatOnScreen()
+        {
+            var desktopWorkingArea = SystemParameters.WorkArea;
+            this.Left = desktopWorkingArea.Left + (desktopWorkingArea.Width - this.Width) / 2;
+            this.Top = desktopWorkingArea.Top + (desktopWorkingArea.Height - this.Height) / 2;
+            _settings.LastX = this.Left;
+            _settings.LastY = this.Top;
+            SettingsManager.Save(_settings);
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -370,6 +380,21 @@ namespace DesktopCat
             _hideBubbleTimer.Stop();
             _currentActiveTask = null;
             CheckNotificationQueue();
+        }
+
+        public void ToggleTestBubble(bool show)
+        {
+            if (show)
+            {
+                NotificationText.Text = "Это тестовое уведомление. Настройте размеры и отступы!";
+                NotificationActionPanel.Visibility = Visibility.Collapsed;
+                NotificationBubble.Visibility = Visibility.Visible;
+                StartCloudBobbingAnimation();
+            }
+            else
+            {
+                NotificationBubble.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void NotifCloseBtn_Click(object sender, RoutedEventArgs e)
@@ -504,6 +529,7 @@ namespace DesktopCat
         {
             _settings.AreNotificationsEnabled = !_settings.AreNotificationsEnabled;
             BtnRadNotif.Foreground = _settings.AreNotificationsEnabled ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGreen) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+            CatSprite.Opacity = _settings.AreNotificationsEnabled ? 1.0 : 0.5;
             SettingsManager.Save(_settings);
         }
 
