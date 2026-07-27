@@ -98,7 +98,11 @@
 
             <!-- Контент (текст и кнопки), слегка смещенный вверх, чтобы быть в центре самого облачка -->
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-15,0,0">
-                <TextBlock x:Name="NotificationText" Text="Notification text" MaxWidth="150" TextWrapping="Wrap" Foreground="Black" TextAlignment="Center" Margin="5"/>
+                <TextBlock x:Name="NotificationText" Text="Notification text" MaxWidth="150" TextWrapping="Wrap" Foreground="Black" TextAlignment="Center" Margin="5">
+                    <TextBlock.Effect>
+                        <DropShadowEffect x:Name="NotificationTextOutline" BlurRadius="2" ShadowDepth="0" Color="White" />
+                    </TextBlock.Effect>
+                </TextBlock>
 
                 <!-- Кнопки действия для уведомления (✔ и ✖) -->
                 <StackPanel x:Name="NotificationActionPanel" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0" Visibility="Collapsed">

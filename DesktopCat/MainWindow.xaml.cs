@@ -25,6 +25,7 @@ namespace DesktopCat
         private DispatcherTimer _leftClickAnimTimer;
         private DateTime _lastLeftClickAnimTime = DateTime.MinValue;
         private bool _isActiveAnimationPlaying = false;
+        private MediaPlayer _mediaPlayer = new MediaPlayer();
 
         public MainWindow()
         {
@@ -79,16 +80,17 @@ namespace DesktopCat
             foreach (var task in _settings.TodoList)
             {
                 // Сбрасываем флаг завершения для постоянных задач, если наступил новый день
-                if (task.IsPermanent && task.IsCompleted && task.ScheduledTime.Date < now.Date)
+                if (task.IsPermanent && (task.IsCompleted || task.IsCanceled) && task.ScheduledTime.Date < now.Date)
                 {
                     task.IsCompleted = false;
+                    task.IsCanceled = false;
                     // Обновляем дату задачи на сегодня, чтобы она снова сработала
                     task.ScheduledTime = new DateTime(now.Year, now.Month, now.Day, task.ScheduledTime.Hour, task.ScheduledTime.Minute, 0);
                     settingsChanged = true;
                 }
 
                 // Проверяем, наступило ли время задачи
-                if (!task.IsCompleted &&
+                if (!task.IsCompleted && !task.IsCanceled &&
                     task.ScheduledTime.Hour == now.Hour &&
                     task.ScheduledTime.Minute == now.Minute &&
                     task.ScheduledTime.Date <= now.Date)
@@ -96,13 +98,15 @@ namespace DesktopCat
                     if (_settings.AreNotificationsEnabled)
                     {
                         // Добавляем в очередь
-                        _notificationQueue.Enqueue(task);
+                        if (!_notificationQueue.Contains(task) && _currentActiveTask != task)
+                        {
+                            _notificationQueue.Enqueue(task);
+                        }
                     }
 
-                    // Отмечаем как "временно" показанную (чтобы таймер не спамил каждую секунду)
-                    // Но по-настоящему Completed она станет при нажатии галочки (или останется висеть в списке)
-                    task.IsCompleted = true;
-                    settingsChanged = true;
+                    // Мы больше не ставим IsCompleted = true временно,
+                    // иначе UI галка в настройках сразу покажет выполнено.
+                    // Отмечаем задачу как "в очереди" условно (это отработает 1 раз за минуту, но очередь защищена от дублей)
                 }
             }
 
@@ -126,7 +130,23 @@ namespace DesktopCat
                 // Воспроизводим звук если включен
                 if (_settings.IsSoundEnabled)
                 {
-                    System.Media.SystemSounds.Exclamation.Play();
+                    try
+                    {
+                        string path = _settings.NotificationSoundPath;
+                        // Если это дефолтный звук, он может быть в папке программы
+                        if (!System.IO.Path.IsPathRooted(path))
+                        {
+                            path = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, path);
+                        }
+
+                        _mediaPlayer.Open(new Uri(path));
+                        _mediaPlayer.Play();
+                    }
+                    catch
+                    {
+                        // Fallback если файл не найден или ошибка
+                        System.Media.SystemSounds.Exclamation.Play();
+                    }
                 }
             }
         }
@@ -270,6 +290,17 @@ namespace DesktopCat
 
             NotificationText.FontSize = _settings.CloudTextSize > 0 ? _settings.CloudTextSize : 14.0;
 
+            if (_settings.CloudTextColor == "Black")
+            {
+                NotificationText.Foreground = System.Windows.Media.Brushes.Black;
+                NotificationTextOutline.Color = System.Windows.Media.Colors.White;
+            }
+            else
+            {
+                NotificationText.Foreground = System.Windows.Media.Brushes.White;
+                NotificationTextOutline.Color = System.Windows.Media.Colors.Black;
+            }
+
             CatSprite.Opacity = _settings.AreNotificationsEnabled ? 1.0 : 0.5;
 
             LoadSkin(_settings.CatSkin);
@@ -374,15 +405,13 @@ namespace DesktopCat
                     _settings.Level++;
                 }
 
-                // Задача уже отмечена как Completed в таймере, если не перманентная - удаляем
-                if (!_currentActiveTask.IsPermanent)
-                {
-                    _settings.TodoList.RemoveAll(t => t.Id == _currentActiveTask.Id);
-                }
+                _currentActiveTask.IsCompleted = true;
+                _currentActiveTask.IsCanceled = false;
+
                 SettingsManager.Save(_settings);
             }
             NotificationBubble.Visibility = Visibility.Collapsed;
-            _hideBubbleTimer.Stop();
+            // Убрали остановку анимации (_hideBubbleTimer/ActiveAnimationTimer), пусть доигрывает
             _currentActiveTask = null;
             CheckNotificationQueue();
         }
@@ -406,12 +435,13 @@ namespace DesktopCat
         {
             if (_currentActiveTask != null)
             {
-                // Если просто закрыли, задача считается невыполненной (остается в календаре красной/неактивной)
+                // Если просто закрыли, задача считается невыполненной/отмененной
                 _currentActiveTask.IsCompleted = false;
+                _currentActiveTask.IsCanceled = true;
                 SettingsManager.Save(_settings);
             }
             NotificationBubble.Visibility = Visibility.Collapsed;
-            _hideBubbleTimer.Stop();
+            // Убрали остановку анимации
             _currentActiveTask = null;
             CheckNotificationQueue();
         }
