@@ -27,6 +27,7 @@ namespace DesktopCat.Services
         public double CloudSize { get; set; } = 200.0;
         public double CloudOffsetX { get; set; } = 0.0;
         public double CloudOffsetY { get; set; } = 0.0;
+        public double CloudTextSize { get; set; } = 14.0;
         public bool IsDevMode { get; set; } = false;
 
         // Тема приложения: "Dark" (по умолчанию, Glassmorphism) или "Light"

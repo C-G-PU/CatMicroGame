@@ -24,6 +24,7 @@ namespace DesktopCat
         private System.Collections.Generic.Queue<TodoTask> _notificationQueue = new System.Collections.Generic.Queue<TodoTask>();
         private DispatcherTimer _leftClickAnimTimer;
         private DateTime _lastLeftClickAnimTime = DateTime.MinValue;
+        private bool _isActiveAnimationPlaying = false;
 
         public MainWindow()
         {
@@ -47,6 +48,7 @@ namespace DesktopCat
 
             _animationTimer = new DispatcherTimer();
             _animationTimer.Tick += (s, e) => {
+                _isActiveAnimationPlaying = false;
                 SetIdleAnimation();
                 _animationTimer.Stop();
             };
@@ -266,6 +268,8 @@ namespace DesktopCat
             CloudTransform.X = _settings.CloudOffsetX;
             CloudTransform.Y = _settings.CloudOffsetY;
 
+            NotificationText.FontSize = _settings.CloudTextSize > 0 ? _settings.CloudTextSize : 14.0;
+
             CatSprite.Opacity = _settings.AreNotificationsEnabled ? 1.0 : 0.5;
 
             LoadSkin(_settings.CatSkin);
@@ -335,6 +339,7 @@ namespace DesktopCat
             _hideBubbleTimer.Stop();
             _hideBubbleTimer.Start();
 
+            _isActiveAnimationPlaying = true;
             SetActiveAnimation();
             _animationTimer.Interval = TimeSpan.FromSeconds(_settings.ActiveAnimationDuration > 0 ? _settings.ActiveAnimationDuration : 5);
             _animationTimer.Stop();
@@ -462,6 +467,13 @@ namespace DesktopCat
                 this.ReleaseMouseCapture();
                 if (!_isDragging)
                 {
+                    // Не прерываем активную анимацию уведомления
+                    if (_isActiveAnimationPlaying)
+                    {
+                        _isDragging = false;
+                        return;
+                    }
+
                     // Это был обычный клик - запускаем новую анимацию, если прошло 5 сек
                     if ((DateTime.Now - _lastLeftClickAnimTime).TotalSeconds >= 5)
                     {
@@ -522,7 +534,7 @@ namespace DesktopCat
         private void RadialStats_Click(object sender, RoutedEventArgs e)
         {
             RadialMenuPopup.IsOpen = false;
-            OpenSettings(2); // 2 = Вкладка статистики
+            OpenSettings(3); // 3 = Вкладка статистики
         }
 
         private void RadialNotif_Click(object sender, RoutedEventArgs e)

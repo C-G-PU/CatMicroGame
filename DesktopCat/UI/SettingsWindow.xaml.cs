@@ -25,6 +25,7 @@ namespace DesktopCat.UI
             SoundCheck.IsChecked = _currentSettings.IsSoundEnabled;
             DevModeCheck.IsChecked = _currentSettings.IsDevMode;
             CloudSizeSlider.Value = _currentSettings.CloudSize;
+            CloudTextSizeSlider.Value = _currentSettings.CloudTextSize > 0 ? _currentSettings.CloudTextSize : 14.0;
             CloudOffsetXSlider.Value = _currentSettings.CloudOffsetX;
             CloudOffsetYSlider.Value = _currentSettings.CloudOffsetY;
 
@@ -165,6 +166,14 @@ namespace DesktopCat.UI
             TasksList.ItemsSource = _currentSettings.TodoList;
         }
 
+        private void MainCalendar_SelectedDatesChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (MainCalendar.SelectedDate.HasValue)
+            {
+                TaskDatePicker.SelectedDate = MainCalendar.SelectedDate.Value;
+            }
+        }
+
         private void TaskTitleInput_GotFocus(object sender, RoutedEventArgs e)
         {
             if (TaskTitleInput.Text == "Новая задача...")
@@ -283,6 +292,7 @@ namespace DesktopCat.UI
             _currentSettings.CatSize = SizeSlider.Value;
 
             _currentSettings.CloudSize = CloudSizeSlider.Value;
+            _currentSettings.CloudTextSize = CloudTextSizeSlider.Value;
             _currentSettings.CloudOffsetX = CloudOffsetXSlider.Value;
             _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
             _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
@@ -317,6 +327,7 @@ namespace DesktopCat.UI
             _currentSettings.BubbleDurationSeconds = (int)BubbleSlider.Value;
 
             _currentSettings.CloudSize = CloudSizeSlider.Value;
+            _currentSettings.CloudTextSize = CloudTextSizeSlider.Value;
             _currentSettings.CloudOffsetX = CloudOffsetXSlider.Value;
             _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
             _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
