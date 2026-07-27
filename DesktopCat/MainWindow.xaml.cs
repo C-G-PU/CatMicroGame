@@ -257,7 +257,7 @@ namespace DesktopCat
             CatSprite.Width = newSize;
             CatSprite.Height = newSize;
 
-            DevModeBorder.Visibility = _settings.IsDevMode ? Visibility.Visible : Visibility.Hidden;
+            DevModeBorder.BorderBrush = _settings.IsDevMode ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red) : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
 
             // Применяем настройки облачка
             double scale = (_settings.CloudSize > 0 ? _settings.CloudSize : 200.0) / 200.0;
