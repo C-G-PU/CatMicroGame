@@ -52,6 +52,7 @@ namespace DesktopCat
                 _isActiveAnimationPlaying = false;
                 SetIdleAnimation();
                 _animationTimer.Stop();
+                CheckNotificationQueue(); // Проверяем очередь после того как анимация завершится
             };
 
             _schedulerTimer = new DispatcherTimer();
@@ -140,6 +141,7 @@ namespace DesktopCat
                         }
 
                         _mediaPlayer.Open(new Uri(path));
+                        _mediaPlayer.Volume = _settings.NotificationVolume;
                         _mediaPlayer.Play();
                     }
                     catch
@@ -303,7 +305,10 @@ namespace DesktopCat
 
             CatSprite.Opacity = _settings.AreNotificationsEnabled ? 1.0 : 0.5;
 
-            LoadSkin(_settings.CatSkin);
+            if (!_isActiveAnimationPlaying && !_leftClickAnimTimer.IsEnabled)
+            {
+                LoadSkin(_settings.CatSkin);
+            }
         }
 
         private void SettingsBtn_Click(object sender, RoutedEventArgs e)
@@ -411,9 +416,10 @@ namespace DesktopCat
                 SettingsManager.Save(_settings);
             }
             NotificationBubble.Visibility = Visibility.Collapsed;
-            // Убрали остановку анимации (_hideBubbleTimer/ActiveAnimationTimer), пусть доигрывает
+            _hideBubbleTimer.Stop(); // Останавливаем таймер облачка, чтобы он не сработал повторно в фоне
             _currentActiveTask = null;
-            CheckNotificationQueue();
+            // Убрали вызов CheckNotificationQueue(), чтобы кот не сбросился и не показал следующее,
+            // пока не доиграет его анимация (10 сек). Очередь будет проверена по окончании анимации.
         }
 
         public void ToggleTestBubble(bool show)
@@ -441,9 +447,10 @@ namespace DesktopCat
                 SettingsManager.Save(_settings);
             }
             NotificationBubble.Visibility = Visibility.Collapsed;
-            // Убрали остановку анимации
+            _hideBubbleTimer.Stop(); // Останавливаем таймер облачка, чтобы он не сработал повторно в фоне
             _currentActiveTask = null;
-            CheckNotificationQueue();
+            // Убрали вызов CheckNotificationQueue(), чтобы кот не сбросился и не показал следующее,
+            // пока не доиграет его анимация (10 сек). Очередь будет проверена по окончании анимации.
         }
 
         private bool _isDragging = false;

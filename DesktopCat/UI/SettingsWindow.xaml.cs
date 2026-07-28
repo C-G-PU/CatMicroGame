@@ -24,6 +24,7 @@ namespace DesktopCat.UI
             NotificationsCheck.IsChecked = _currentSettings.AreNotificationsEnabled;
             SoundCheck.IsChecked = _currentSettings.IsSoundEnabled;
             SoundPathText.Text = _currentSettings.NotificationSoundPath;
+            SoundVolumeSlider.Value = _currentSettings.NotificationVolume;
             DevModeCheck.IsChecked = _currentSettings.IsDevMode;
             CloudSizeSlider.Value = _currentSettings.CloudSize;
             CloudTextSizeSlider.Value = _currentSettings.CloudTextSize > 0 ? _currentSettings.CloudTextSize : 14.0;
@@ -321,11 +322,17 @@ namespace DesktopCat.UI
             }
         }
 
-        private void TaskItem_Changed(object sender, RoutedEventArgs e)
+        private void TaskComplete_Click(object sender, RoutedEventArgs e)
         {
-            if (_isLoaded && sender is System.Windows.Controls.CheckBox cb && cb.DataContext is TodoTask task)
+            if (_isLoaded && sender is System.Windows.Controls.Primitives.ToggleButton tb && tb.DataContext is TodoTask task)
             {
-                if (cb.IsChecked == true)
+                if (task.IsCanceled && task.IsCompleted)
+                {
+                    // Взаимоисключение: если выполнили, то снимаем отмену
+                    task.IsCanceled = false;
+                }
+
+                if (task.IsCompleted)
                 {
                     _currentSettings.Exp += 10;
                     _currentSettings.TotalTasksCompleted++;
@@ -337,6 +344,7 @@ namespace DesktopCat.UI
                 }
                 else
                 {
+                    // Снимаем галочку
                     _currentSettings.Exp -= 10;
                     _currentSettings.TotalTasksCompleted--;
                     if (_currentSettings.Exp < 0 && _currentSettings.Level > 1)
@@ -348,15 +356,44 @@ namespace DesktopCat.UI
                     if (_currentSettings.TotalTasksCompleted < 0) _currentSettings.TotalTasksCompleted = 0;
                 }
 
-                // Обновляем статистику в UI
-                LevelText.Text = _currentSettings.Level.ToString();
-                ExpBar.Maximum = _currentSettings.Level * 50;
-                ExpBar.Value = _currentSettings.Exp;
-                ExpText.Text = $"{_currentSettings.Exp} / {_currentSettings.Level * 50}";
-                TotalTasksText.Text = _currentSettings.TotalTasksCompleted.ToString();
-
+                UpdateStatsUI();
+                RefreshTasksList(); // Обновит цвета
                 SettingsManager.NotifyLiveUpdate(_currentSettings);
             }
+        }
+
+        private void TaskCancel_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isLoaded && sender is System.Windows.Controls.Primitives.ToggleButton tb && tb.DataContext is TodoTask task)
+            {
+                // Взаимоисключение: если отменили, снимаем "выполнено" и отбираем опыт если он был начислен
+                if (task.IsCanceled && task.IsCompleted)
+                {
+                    task.IsCompleted = false;
+                    _currentSettings.Exp -= 10;
+                    _currentSettings.TotalTasksCompleted--;
+                    if (_currentSettings.Exp < 0 && _currentSettings.Level > 1)
+                    {
+                        _currentSettings.Level--;
+                        _currentSettings.Exp += _currentSettings.Level * 50;
+                    }
+                    if (_currentSettings.Exp < 0) _currentSettings.Exp = 0;
+                    if (_currentSettings.TotalTasksCompleted < 0) _currentSettings.TotalTasksCompleted = 0;
+                }
+
+                UpdateStatsUI();
+                RefreshTasksList(); // Обновит цвета
+                SettingsManager.NotifyLiveUpdate(_currentSettings);
+            }
+        }
+
+        private void UpdateStatsUI()
+        {
+            LevelText.Text = _currentSettings.Level.ToString();
+            ExpBar.Maximum = _currentSettings.Level * 50;
+            ExpBar.Value = _currentSettings.Exp;
+            ExpText.Text = $"{_currentSettings.Exp} / {_currentSettings.Level * 50}";
+            TotalTasksText.Text = _currentSettings.TotalTasksCompleted.ToString();
         }
 
         private void SyncApi_Click(object sender, RoutedEventArgs e)
@@ -403,6 +440,7 @@ namespace DesktopCat.UI
             _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
             _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
             _currentSettings.IsSoundEnabled = SoundCheck.IsChecked ?? true;
+            _currentSettings.NotificationVolume = SoundVolumeSlider.Value;
             _currentSettings.AreNotificationsEnabled = NotificationsCheck.IsChecked ?? true;
 
             // Уведомляем главное окно о временных изменениях без записи в файл
@@ -450,6 +488,7 @@ namespace DesktopCat.UI
             _currentSettings.CloudOffsetY = CloudOffsetYSlider.Value;
             _currentSettings.IsDevMode = DevModeCheck.IsChecked ?? false;
             _currentSettings.IsSoundEnabled = SoundCheck.IsChecked ?? true;
+            _currentSettings.NotificationVolume = SoundVolumeSlider.Value;
             _currentSettings.AreNotificationsEnabled = NotificationsCheck.IsChecked ?? true;
 
             if (CatSkinCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem)

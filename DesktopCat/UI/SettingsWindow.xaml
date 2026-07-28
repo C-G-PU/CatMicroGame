@@ -1,10 +1,13 @@
 <Window x:Class="DesktopCat.UI.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DesktopCat.Converters"
         Title="Настройки котика" MinHeight="550" MinWidth="650" Height="550" Width="650" WindowStartupLocation="CenterScreen"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent" MouseDown="Window_MouseDown" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <local:BoolToColorConverter x:Key="BoolToColorComplete" TrueColor="LightGreen" FalseColor="Gray" />
+        <local:BoolToColorConverter x:Key="BoolToColorCancel" TrueColor="IndianRed" FalseColor="Gray" />
         <!-- Glassmorphism стили -->
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
@@ -112,9 +115,8 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="✔" Foreground="LightGreen" VerticalAlignment="Center" Margin="0,0,5,0" Visibility="{Binding IsCompleted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <TextBlock Text="✖" Foreground="IndianRed" VerticalAlignment="Center" Margin="0,0,5,0" Visibility="{Binding IsCanceled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <CheckBox Grid.Column="1" IsChecked="{Binding IsCompleted}" VerticalAlignment="Center" Margin="0,0,5,0" Checked="TaskItem_Changed" Unchecked="TaskItem_Changed"/>
+                                            <ToggleButton Grid.Column="0" IsChecked="{Binding IsCompleted}" Content="✔" Foreground="{Binding IsCompleted, Converter={StaticResource BoolToColorComplete}}" Background="Transparent" BorderThickness="0" Margin="0,0,2,0" Click="TaskComplete_Click" Tag="{Binding Id}"/>
+                                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsCanceled}" Content="✖" Foreground="{Binding IsCanceled, Converter={StaticResource BoolToColorCancel}}" Background="Transparent" BorderThickness="0" Margin="0,0,5,0" Click="TaskCancel_Click" Tag="{Binding Id}"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Title}" VerticalAlignment="Center" Foreground="White" TextTrimming="CharacterEllipsis" MouseLeftButtonDown="TaskTitle_MouseLeftButtonDown" Tag="{Binding Id}" Cursor="Hand"/>
                                             <TextBlock Grid.Column="3" Text="{Binding ScheduledTime, StringFormat=\{0:dd.MM HH:mm\}}" VerticalAlignment="Center" Foreground="LightGray" Margin="5,0"/>
 
@@ -197,56 +199,46 @@
 
                 <!-- Вкладка Уведомлений / Облачка -->
                 <TabItem Header="Уведомления" Foreground="Black">
-                    <Grid Margin="0,10,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
+                        <StackPanel>
+                            <CheckBox x:Name="NotificationsCheck" Content="Включить уведомления" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
 
-                        <CheckBox x:Name="NotificationsCheck" Grid.Row="0" Content="Включить уведомления" Foreground="White" Margin="0,0,0,10" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <CheckBox x:Name="SoundCheck" Content="Звуковое уведомление" Foreground="White" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <Button Content="Выбрать звук..." Width="100" Padding="2" Background="#440055FF" Click="ChooseSound_Click"/>
+                            </StackPanel>
 
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-                            <CheckBox x:Name="SoundCheck" Content="Звуковое уведомление" Foreground="White" Checked="LiveUpdate_Trigger" Unchecked="LiveUpdate_Trigger" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <Button Content="Выбрать звук..." Width="100" Padding="2" Background="#440055FF" Click="ChooseSound_Click"/>
+                            <TextBlock x:Name="SoundPathText" Text="Assets\miay.mp3" Foreground="LightGray" FontSize="11" Margin="20,-5,0,10" TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock Text="Громкость звука:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <Slider x:Name="SoundVolumeSlider" Minimum="0" Maximum="1" TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                    Value="1" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                            <CheckBox x:Name="TestBubbleCheck" Content="Показать облачко для настройки" Foreground="White" Margin="0,0,0,15" Checked="TestBubble_Changed" Unchecked="TestBubble_Changed"/>
+
+                            <TextBlock Text="Размер облачка:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <Slider x:Name="CloudSizeSlider" Minimum="100" Maximum="400" TickFrequency="10" IsSnapToTickEnabled="True"
+                                    Value="200" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                            <TextBlock Text="Цвет текста:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <ComboBox x:Name="CloudTextColorCombo" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
+                                <ComboBoxItem Content="Белый с черной обводкой" Tag="White"/>
+                                <ComboBoxItem Content="Черный с белой обводкой" Tag="Black"/>
+                            </ComboBox>
+
+                            <TextBlock Text="Размер текста в облачке:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <Slider x:Name="CloudTextSizeSlider" Minimum="10" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    Value="14" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                            <TextBlock Text="Смещение облачка по горизонтали (X):" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <Slider x:Name="CloudOffsetXSlider" Minimum="-100" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
+                                    Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
+
+                            <TextBlock Text="Смещение облачка по вертикали (Y):" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <Slider x:Name="CloudOffsetYSlider" Minimum="-150" Maximum="150" TickFrequency="5" IsSnapToTickEnabled="True"
+                                    Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
                         </StackPanel>
-
-                        <TextBlock x:Name="SoundPathText" Grid.Row="2" Text="Assets\miay.mp3" Foreground="LightGray" FontSize="11" Margin="20,-5,0,15" TextTrimming="CharacterEllipsis"/>
-
-                        <CheckBox x:Name="TestBubbleCheck" Grid.Row="3" Content="Показать облачко для настройки" Foreground="White" Margin="0,0,0,15" Checked="TestBubble_Changed" Unchecked="TestBubble_Changed"/>
-
-                        <TextBlock Grid.Row="3" Text="Размер облачка:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudSizeSlider" Grid.Row="4" Minimum="100" Maximum="400" TickFrequency="10" IsSnapToTickEnabled="True"
-                                Value="200" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
-
-                        <TextBlock Grid.Row="5" Text="Цвет текста:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="CloudTextColorCombo" Grid.Row="6" Margin="0,0,0,15" SelectionChanged="LiveUpdate_Trigger">
-                            <ComboBoxItem Content="Белый с черной обводкой" Tag="White"/>
-                            <ComboBoxItem Content="Черный с белой обводкой" Tag="Black"/>
-                        </ComboBox>
-
-                        <TextBlock Grid.Row="7" Text="Размер текста в облачке:" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudTextSizeSlider" Grid.Row="8" Minimum="10" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True"
-                                Value="14" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
-
-                        <TextBlock Grid.Row="9" Text="Смещение облачка по горизонтали (X):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudOffsetXSlider" Grid.Row="10" Minimum="-100" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
-                                Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
-
-                        <TextBlock Grid.Row="11" Text="Смещение облачка по вертикали (Y):" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <Slider x:Name="CloudOffsetYSlider" Grid.Row="12" Minimum="-150" Maximum="150" TickFrequency="5" IsSnapToTickEnabled="True"
-                                Value="0" AutoToolTipPlacement="TopLeft" Margin="0,0,0,15" ValueChanged="LiveUpdate_Trigger"/>
-                    </Grid>
+                    </ScrollViewer>
                 </TabItem>
 
                 <!-- Вкладка Статистики -->
