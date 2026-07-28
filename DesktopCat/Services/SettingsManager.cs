@@ -30,6 +30,9 @@ namespace DesktopCat.Services
         public double CloudTextSize { get; set; } = 14.0;
         public bool IsDevMode { get; set; } = false;
 
+        public string CloudTextColor { get; set; } = "White";
+        public string NotificationSoundPath { get; set; } = "Assets\\miay.mp3";
+
         // Тема приложения: "Dark" (по умолчанию, Glassmorphism) или "Light"
         public string AppTheme { get; set; } = "Dark";
     }

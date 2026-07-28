@@ -15,5 +15,8 @@ namespace DesktopCat.Services
 
         // Выполнена ли задача (если не постоянная, то сбросится или удалится на следующий день/период)
         public bool IsCompleted { get; set; } = false;
+
+        // Отменена/пропущена ли задача
+        public bool IsCanceled { get; set; } = false;
     }
 }

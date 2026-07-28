@@ -23,6 +23,7 @@ namespace DesktopCat.UI
 
             NotificationsCheck.IsChecked = _currentSettings.AreNotificationsEnabled;
             SoundCheck.IsChecked = _currentSettings.IsSoundEnabled;
+            SoundPathText.Text = _currentSettings.NotificationSoundPath;
             DevModeCheck.IsChecked = _currentSettings.IsDevMode;
             CloudSizeSlider.Value = _currentSettings.CloudSize;
             CloudTextSizeSlider.Value = _currentSettings.CloudTextSize > 0 ? _currentSettings.CloudTextSize : 14.0;
@@ -108,6 +109,17 @@ namespace DesktopCat.UI
             if (AppThemeCombo.SelectedItem == null && AppThemeCombo.Items.Count > 0)
                 AppThemeCombo.SelectedIndex = 0;
 
+            foreach (System.Windows.Controls.ComboBoxItem item in CloudTextColorCombo.Items)
+            {
+                if (item.Tag?.ToString() == _currentSettings.CloudTextColor)
+                {
+                    CloudTextColorCombo.SelectedItem = item;
+                    break;
+                }
+            }
+            if (CloudTextColorCombo.SelectedItem == null && CloudTextColorCombo.Items.Count > 0)
+                CloudTextColorCombo.SelectedIndex = 0;
+
             ApplyThemeUI();
         }
 
@@ -182,6 +194,80 @@ namespace DesktopCat.UI
             }
         }
 
+        private string? _editingTaskId = null;
+
+        private void TaskTitle_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2 && sender is System.Windows.Controls.TextBlock tb && tb.Tag is string taskId)
+            {
+                var task = _currentSettings.TodoList.Find(t => t.Id == taskId);
+                if (task != null)
+                {
+                    _editingTaskId = taskId;
+                    TaskTitleInput.Text = task.Title;
+                    TaskDatePicker.SelectedDate = task.ScheduledTime.Date;
+                    TaskTimeInput.Text = task.ScheduledTime.ToString("HH:mm");
+                    TaskPermanentCheck.IsChecked = task.IsPermanent;
+                }
+            }
+        }
+
+        private void TransferTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && btn.Tag is string taskId)
+            {
+                var task = _currentSettings.TodoList.Find(t => t.Id == taskId);
+                if (task != null)
+                {
+                    task.ScheduledTime = task.ScheduledTime.AddDays(1);
+                    task.IsCompleted = false;
+                    task.IsCanceled = false;
+                    RefreshTasksList();
+                    SettingsManager.NotifyLiveUpdate(_currentSettings);
+                }
+            }
+        }
+
+        private void DuplicateTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && btn.Tag is string taskId)
+            {
+                var task = _currentSettings.TodoList.Find(t => t.Id == taskId);
+                if (task != null)
+                {
+                    var newTask = new TodoTask
+                    {
+                        Title = task.Title,
+                        ScheduledTime = task.ScheduledTime.AddDays(1),
+                        IsPermanent = task.IsPermanent,
+                        IsCompleted = false,
+                        IsCanceled = false
+                    };
+                    _currentSettings.TodoList.Add(newTask);
+                    RefreshTasksList();
+                    SettingsManager.NotifyLiveUpdate(_currentSettings);
+                }
+            }
+        }
+
+        private void QuickTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && int.TryParse(btn.Tag?.ToString(), out int minutes))
+            {
+                var newTask = new TodoTask
+                {
+                    Title = "Быстрое уведомление",
+                    ScheduledTime = DateTime.Now.AddMinutes(minutes),
+                    IsPermanent = false,
+                    IsCompleted = false,
+                    IsCanceled = false
+                };
+                _currentSettings.TodoList.Add(newTask);
+                RefreshTasksList();
+                SettingsManager.NotifyLiveUpdate(_currentSettings);
+            }
+        }
+
         private void AddTask_Click(object sender, RoutedEventArgs e)
         {
             string title = TaskTitleInput.Text.Trim();
@@ -195,15 +281,30 @@ namespace DesktopCat.UI
                 scheduledTime = selectedDate.Add(ts);
             }
 
-            var newTask = new TodoTask
+            if (_editingTaskId != null)
             {
-                Title = title,
-                ScheduledTime = scheduledTime,
-                IsPermanent = TaskPermanentCheck.IsChecked ?? false,
-                IsCompleted = false
-            };
+                var existingTask = _currentSettings.TodoList.Find(t => t.Id == _editingTaskId);
+                if (existingTask != null)
+                {
+                    existingTask.Title = title;
+                    existingTask.ScheduledTime = scheduledTime;
+                    existingTask.IsPermanent = TaskPermanentCheck.IsChecked ?? false;
+                }
+                _editingTaskId = null;
+            }
+            else
+            {
+                var newTask = new TodoTask
+                {
+                    Title = title,
+                    ScheduledTime = scheduledTime,
+                    IsPermanent = TaskPermanentCheck.IsChecked ?? false,
+                    IsCompleted = false,
+                    IsCanceled = false
+                };
+                _currentSettings.TodoList.Add(newTask);
+            }
 
-            _currentSettings.TodoList.Add(newTask);
             RefreshTasksList();
 
             TaskTitleInput.Text = "Новая задача...";
@@ -289,6 +390,11 @@ namespace DesktopCat.UI
                 ApplyThemeUI();
             }
 
+            if (CloudTextColorCombo.SelectedItem is System.Windows.Controls.ComboBoxItem colorItem)
+            {
+                _currentSettings.CloudTextColor = colorItem.Tag?.ToString() ?? "White";
+            }
+
             _currentSettings.CatSize = SizeSlider.Value;
 
             _currentSettings.CloudSize = CloudSizeSlider.Value;
@@ -301,6 +407,18 @@ namespace DesktopCat.UI
 
             // Уведомляем главное окно о временных изменениях без записи в файл
             SettingsManager.NotifyLiveUpdate(_currentSettings);
+        }
+
+        private void ChooseSound_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.Filter = "Audio Files (*.mp3;*.wav)|*.mp3;*.wav";
+            if (dialog.ShowDialog() == true)
+            {
+                _currentSettings.NotificationSoundPath = dialog.FileName;
+                SoundPathText.Text = dialog.FileName;
+                SettingsManager.NotifyLiveUpdate(_currentSettings);
+            }
         }
 
         private void CenterCatBtn_Click(object sender, RoutedEventArgs e)
@@ -345,6 +463,10 @@ namespace DesktopCat.UI
             if (AppThemeCombo.SelectedItem is System.Windows.Controls.ComboBoxItem themeItem2)
             {
                 _currentSettings.AppTheme = themeItem2.Tag?.ToString() ?? "Dark";
+            }
+            if (CloudTextColorCombo.SelectedItem is System.Windows.Controls.ComboBoxItem colorItem2)
+            {
+                _currentSettings.CloudTextColor = colorItem2.Tag?.ToString() ?? "White";
             }
 
             SettingsManager.Save(_currentSettings);
